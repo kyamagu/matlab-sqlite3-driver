@@ -80,3 +80,11 @@ function [sqlite3_path, boost_regex_path, varargout] = parse_options(varargin)
     varargout = varargin(~mark_for_delete);
 
 end
+
+function str = strjoin(varargin)
+% concat array into string
+
+str = cellfun(@(s)[s,' '],varargin,'UniformOutput',false);
+str = [str{:}];
+
+end
