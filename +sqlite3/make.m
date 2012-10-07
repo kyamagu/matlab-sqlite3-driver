@@ -43,14 +43,14 @@ function make(varargin)
     cwd = pwd;
     cd(fileparts(mfilename('fullpath')));
     try
-        [sqlite3_path, boost_regex_path, varargin] = ...
+        [sqlite3_path, boost_regex_path, compiler_flags] = ...
             parse_options(varargin{:});
         cmd = sprintf([...
             'mex -largeArrayDims driver.cc sqlite3mex.cc '...
             '-output driver %s %s %s'],...
             sqlite3_path,...
             boost_regex_path,...
-            strjoin(varargin, ' ') ...
+            strjoin(compiler_flags) ...
             );
         disp(cmd);
         eval(cmd);
@@ -61,7 +61,8 @@ function make(varargin)
 
 end
 
-function [sqlite3_path, boost_regex_path, varargout] = parse_options(varargin)
+function [sqlite3_path, boost_regex_path, compiler_flags] = ...
+    parse_options(varargin)
 % parse boost_regex-mt and libsqlite3 options
 
     boost_regex_path = '-lboost_regex-mt';
@@ -77,14 +78,14 @@ function [sqlite3_path, boost_regex_path, varargout] = parse_options(varargin)
             mark_for_delete(i:i+1) = true;
         end
     end
-    varargout = varargin(~mark_for_delete);
+    compiler_flags = varargin(~mark_for_delete);
 
 end
 
-function str = strjoin(varargin)
+function str = strjoin(compiler_flags)
 % concat array into string
 
-str = cellfun(@(s)[s,' '],varargin,'UniformOutput',false);
+str = cellfun(@(s)[s, ' '],compiler_flags,'UniformOutput',false);
 str = [str{:}];
 
 end
