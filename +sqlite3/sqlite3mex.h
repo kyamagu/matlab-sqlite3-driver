@@ -7,6 +7,7 @@
 #include <map>
 #include <memory>
 #include <mex.h>
+#include <set>
 #include <sqlite3.h>
 #include <sstream>
 #include <stdint.h>
