@@ -22,29 +22,35 @@ The package comes with sqlite3.make script for compiling. See
 `help sqlite3.make` for the detailed usage of the script.
 
 The script can choose to build either statically linked binary or dynamically
-linked binary. In general it is recommended to make a statically linked binary.
+linked binary. In general it is recommended to make a statically linked binary
+if possible. However, if the static version of sqlite3 or boost_regex library
+is not available, use dynamic linking.
 
 The following example assumes libraries are installed under `/opt/local`.
 
 __Static linking__
 
+Specify static library paths and optional compiler flags in the argument.
+
     >> sqlite3.make('--libsqlite3_path',     '/opt/local/lib/libsqlite3.a', ...
                     '--libboost_regex_path', '/opt/local/lib/libboost_regex-mt.a', ...
                     '-I/opt/local/include');
 
-__Dynamic linking (not recommended)__
+__Dynamic linking__
+
+Specify optional compiler flags in the argument.
 
     >> sqlite3.make('-I/opt/local/include', '-L/opt/local/lib')
 
-When using dynamically linked binary, you need to preload the shared library
-when launching matlab. This is because matlab depends on its internal boost
-library which is usually incompatible with the system. Set the `LD_PRELOAD`
-variable on Linux or `DYLD_INSERT_LIBRARIES` variable on Mac OS X when starting
-matlab.
+When using dynamically linked binary, you might need to preload the shared
+library on launching matlab. This is because matlab depends on its internal
+boost library which is usually incompatible with the system. Set the
+`LD_PRELOAD` variable on Linux or `DYLD_INSERT_LIBRARIES` variable on Mac OS X
+when starting matlab.
 
 Linux:
 
-    LD_PRELOAD=/usr/lib/libboost_regex-mt.dylib matlab
+    LD_PRELOAD=/usr/lib/libboost_regex-mt.so matlab
 
 Mac OS X:
 
@@ -116,8 +122,7 @@ Example:
     >> result = sqlite3.driver(db, 'SELECT * FROM table')
     >> result = sqlite3.driver('execute', 'SELECT * FROM table')
     >> result = sqlite3.driver('SELECT * FROM table')
-    >> result = sqlite3.driver('SELECT * FROM table WHERE rowid = ?', 1)
-    >> result = sqlite3.driver('SELECT * FROM table WHERE name = ?', 'foo')
+    >> result = sqlite3.driver('SELECT * FROM table WHERE rowid = ? OR name = ?', 1, 'foo')
 
 __timeout__
 

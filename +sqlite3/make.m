@@ -19,7 +19,7 @@ function make(varargin)
 %
 % By default, sqlite3.make builds a dynamically linked mex file. The above
 % two options allow you to create a statistically linked mex file instead.
-% Since matlab includes its own boost library which usually differs from
+% Since matlab includes its own boost library which sometimes differs from
 % system library, dynamically linked mex file might not work without
 % library preloading.
 %
@@ -34,7 +34,7 @@ function make(varargin)
 %                 '--libboost_regex_path', '/opt/local/lib/libboost_regex-mt.a', ...
 %                 '-I/opt/local/include');
 %
-% Dynamic linking (not recommended)
+% Dynamic linking
 %
 % >> sqlite3.make('-I/opt/local/include', '-L/opt/local/lib');
 %
