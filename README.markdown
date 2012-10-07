@@ -15,7 +15,6 @@ installed in the system.
  * Boost C++ Library
  * SQLite3
 
-
 Compile
 -------
 
@@ -25,10 +24,12 @@ The package comes with sqlite3.make script for compiling. See
 The script can choose to build either statically linked binary or dynamically
 linked binary. In general it is recommended to make a statically linked binary.
 
+The following example assumes libraries are installed under `/opt/local`.
+
 __Static linking__
 
-    >> sqlite3.make('libsqlite3_path',     '/opt/local/lib/libsqlite3.a', ...
-                    'libboost_regex_path', '/opt/local/lib/libboost_regex-mt.a', ...
+    >> sqlite3.make('--libsqlite3_path',     '/opt/local/lib/libsqlite3.a', ...
+                    '--libboost_regex_path', '/opt/local/lib/libboost_regex-mt.a', ...
                     '-I/opt/local/include');
 
 __Dynamic linking (not recommended)__
@@ -61,7 +62,7 @@ The mex function `sqlite3.driver` supports following operations.
     execute   Execute an SQLite statement.
     timeout   Set timeout value when databse is busy.
 
-The mex function accepts following argument syntax.
+The function accepts following argument syntax.
 
     sqlite3.driver([db,] [operation,] [argment1, argument2, ...])
 
@@ -107,6 +108,8 @@ The sql statement can use binding of the value through `?` as the placeholder.
 When the binding is used, there must be the corresponding number of parameters
 followed by the sql statement.
 
+Results are returned as a struct array.
+
 Example:
 
     >> result = sqlite3.driver(db, 'execute', 'SELECT * FROM table')
@@ -128,3 +131,8 @@ Example:
 
     >> sqlite3.driver(db, 'timeout', 1000)
     >> sqlite3.driver('timeout', 1000)
+
+License
+-------
+
+The code may be redistributed under BSD 3-clause license.

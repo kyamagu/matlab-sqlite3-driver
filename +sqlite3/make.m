@@ -12,10 +12,10 @@ function make(varargin)
 %
 % Options:
 %
-%     Option name          Value
-%     -------------------  ---------------------------
-%     libsqlite3_path      path to libsqlite3.a
-%     libboost_regex_path  path to libboost_regex-mt.a
+%     Option name            Value
+%     ---------------------  ---------------------------
+%     --libsqlite3_path      path to libsqlite3.a
+%     --libboost_regex_path  path to libboost_regex-mt.a
 %
 % By default, sqlite3.make builds a dynamically linked mex file. The above
 % two options allow you to create a statistically linked mex file instead.
@@ -30,8 +30,8 @@ function make(varargin)
 %
 % Static linking
 %
-% >> sqlite3.make('libsqlite3_path',     '/opt/local/lib/libsqlite3.a', ...
-%                 'libboost_regex_path', '/opt/local/lib/libboost_regex-mt.a', ...
+% >> sqlite3.make('--libsqlite3_path',     '/opt/local/lib/libsqlite3.a', ...
+%                 '--libboost_regex_path', '/opt/local/lib/libboost_regex-mt.a', ...
 %                 '-I/opt/local/include');
 %
 % Dynamic linking (not recommended)
@@ -68,11 +68,11 @@ function [sqlite3_path, boost_regex_path, varargout] = parse_options(varargin)
     sqlite3_path = '-lsqlite3';
     mark_for_delete = false(size(varargin));
     for i = 1:2:numel(varargin)
-        if strcmp(varargin{i}, 'libboost_regex_path')
+        if strcmp(varargin{i}, '--libboost_regex_path')
             boost_regex_path = varargin{i+1};
             mark_for_delete(i:i+1) = true;
         end
-        if strcmp(varargin{i}, 'libsqlite3_path')
+        if strcmp(varargin{i}, '--libsqlite3_path')
             sqlite3_path = varargin{i+1};
             mark_for_delete(i:i+1) = true;
         end
