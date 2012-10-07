@@ -52,7 +52,7 @@ Mac OS X:
 Usage
 -----
 
-There mex function `sqlite3.driver` supports following operations.
+The mex function `sqlite3.driver` supports following operations.
 
     Operation Description
     --------- ---------------------------------------
