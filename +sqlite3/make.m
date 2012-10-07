@@ -36,18 +36,19 @@ function make(varargin)
 %
 % Dynamic linking (not recommended)
 %
-% >> sqlite3.make('-I/opt/local/include', '-L/opt/local/lib')
+% >> sqlite3.make('-I/opt/local/include', '-L/opt/local/lib');
 %
 % See also mex
 
-    cwd = pwd;
-    cd(fileparts(mfilename('fullpath')));
+    package_dir = fileparts(mfilename('fullpath'));
     try
         [sqlite3_path, boost_regex_path, compiler_flags] = ...
             parse_options(varargin{:});
         cmd = sprintf([...
-            'mex -largeArrayDims driver.cc sqlite3mex.cc '...
-            '-output driver %s %s %s'],...
+            'mex -largeArrayDims %s %s -outdir %s -output driver %s %s %s'],...
+            fullfile(package_dir, 'driver.cc'),...
+            fullfile(package_dir, 'sqlite3mex.cc'),...
+            package_dir,...
             sqlite3_path,...
             boost_regex_path,...
             strjoin(compiler_flags) ...
@@ -57,7 +58,6 @@ function make(varargin)
     catch e
         disp(e.getReport);
     end
-    cd(cwd);
 
 end
 
@@ -85,7 +85,7 @@ end
 function str = strjoin(compiler_flags)
 % concat array into string
 
-str = cellfun(@(s)[s, ' '],compiler_flags,'UniformOutput',false);
-str = [str{:}];
+    str = cellfun(@(s)[s, ' '],compiler_flags,'UniformOutput',false);
+    str = [str{:}];
 
 end
