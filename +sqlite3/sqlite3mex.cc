@@ -224,9 +224,12 @@ void Database::create_columns(const Statement& stmt, vector<Column>* columns) {
   set<string> unique_names;
   for (int i = 0; i < stmt.column_count(); ++i) {
     // Clean column name.
-    static const boost::regex non_alphabets("([^a-zA-Z]+)");
-    string name = boost::regex_replace(stmt.column_name(i), non_alphabets,
-                                       string(" "));
+    static const boost::regex leading_non_alphabets("^[^a-zA-Z]*");
+    static const boost::regex non_alphanumerics("[^a-zA-Z0-9]+");
+    string name = boost::regex_replace(stmt.column_name(i),
+                                       leading_non_alphabets,
+                                       "");
+    name = boost::regex_replace(name, non_alphanumerics, " ");
     boost::algorithm::trim(name);
     boost::algorithm::replace_all(name, " ", "_");
     boost::algorithm::to_lower(name);
