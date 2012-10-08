@@ -1,3 +1,4 @@
+// sqlite3 driver library.
 #include "sqlite3mex.h"
 
 namespace sqlite3mex {

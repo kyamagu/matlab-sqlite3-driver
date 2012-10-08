@@ -1,4 +1,4 @@
-// sqlite3 adapter library for mex.
+// sqlite3 driver library.
 #include <boost/algorithm/string.hpp>
 #include <boost/regex.hpp>
 #include <boost/unordered_map.hpp>
