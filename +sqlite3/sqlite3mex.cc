@@ -282,9 +282,10 @@ mxArray* Database::convert_value_to_array(const Value& value, int type) {
   mxArray* array = NULL;
   switch (type) {
     case SQLITE_INTEGER: {
-      array = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
-      *reinterpret_cast<IntegerValue*>(mxGetData(array)) =
-          static_cast<IntegerValue>(boost::get<IntegerValue>(value));
+      //array = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
+      //*reinterpret_cast<IntegerValue*>(mxGetData(array)) =
+      //    static_cast<IntegerValue>(boost::get<IntegerValue>(value));
+      array = mxCreateDoubleScalar(boost::get<IntegerValue>(value));
       break;
     }
     case SQLITE_FLOAT: {
