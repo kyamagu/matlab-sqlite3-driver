@@ -319,7 +319,7 @@ DatabaseManager::~DatabaseManager() {}
 int DatabaseManager::open(const string& filename) {
   if (!connections_[++last_id_].open(filename))
     mexErrMsgIdAndTxt("sqlite3mex:error",
-                      "Unable to open: %s", filename.c_str());
+                      "Unable to open: %s.", filename.c_str());
   return last_id_;
 }
 
@@ -358,7 +358,7 @@ Operation* Operation::parse(int nrhs, const mxArray *prhs[]) {
     switch (state) {
       case PARSER_INIT: {
         if (it == input.end()) {
-          mexErrMsgIdAndTxt("sqlite3:error", "Invalid input");
+          mexErrMsgIdAndTxt("sqlite3:error", "Invalid input.");
         }
         else if (mxIsChar(*it)) {
           id = manager()->default_id();
@@ -368,13 +368,13 @@ Operation* Operation::parse(int nrhs, const mxArray *prhs[]) {
           ++it;
         }
         else
-          mexErrMsgIdAndTxt("sqlite3:error", "Invalid argument");
+          mexErrMsgIdAndTxt("sqlite3:error", "Invalid argument.");
         state = PARSER_ID;
         break;
       }
       case PARSER_ID: {
         if (it == input.end()) {
-          mexErrMsgIdAndTxt("sqlite3:error", "Invalid input");
+          mexErrMsgIdAndTxt("sqlite3:error", "Invalid input.");
         }
         else if (mxIsChar(*it)) {
           string arg(mxGetChars(*it),
@@ -400,7 +400,7 @@ Operation* Operation::parse(int nrhs, const mxArray *prhs[]) {
           }
         }
         else
-          mexErrMsgIdAndTxt("sqlite3:error", "Invalid argument");
+          mexErrMsgIdAndTxt("sqlite3:error", "Invalid argument.");
         operation->id_ = id;
         state = PARSER_CMD;
         break;
@@ -410,6 +410,9 @@ Operation* Operation::parse(int nrhs, const mxArray *prhs[]) {
         state = PARSER_FINISH;
         break;
       }
+      case PARSER_FINISH:
+        mexErrMsgIdAndTxt("sqlite3:error", "Fatal error.");
+        break;
     }
   }
   return operation.release();
