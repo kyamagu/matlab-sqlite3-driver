@@ -1,8 +1,8 @@
 // sqlite3 driver library.
 #include <boost/algorithm/string.hpp>
-#include <boost/regex.hpp>
 #include <boost/unordered_map.hpp>
 #include <boost/variant.hpp>
+#include <boost/xpressive/xpressive.hpp>
 #include <deque>
 #include <map>
 #include <memory>

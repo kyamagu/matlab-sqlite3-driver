@@ -1,56 +1,48 @@
 function make(varargin)
 %SQLITE3.MAKE  build a driver mex file
 %
-%    sqlite3.make(['optionName', optionValue, ...,] [compiler_flags])
+%    sqlite3.make(['optionName', optionValue,] [compiler_flags])
 %
 % sqlite3.make builds a mex file for the sqlite3 driver. The make script
-% accepts two options and compiler flags for the mex command. See below
-% for the supported options.
-%
-% In addition to the options, sqlite3.make takes compiler options passed
-% to mex command.
+% accepts sqlite3 path option and compiler flags for the mex command.
+% See below for the supported build options.
 %
 % Options:
 %
-%     Option name            Value
-%     ---------------------  ---------------------------
-%     --libsqlite3_path      path to libsqlite3.a
-%     --libboost_regex_path  path to libboost_regex-mt.a
+%    Option name          Value
+%    -------------------  -------------------------------------------------
+%    --libsqlite3_path    path to libsqlite3.a. e.g., /usr/lib/libsqlite3.a
 %
 % By default, sqlite3.make builds a dynamically linked mex file. The above
-% two options allow you to create a statistically linked mex file instead.
-% Since matlab includes its own boost library which sometimes differs from
-% system library, dynamically linked mex file might not work without
-% library preloading.
+% option allows you to create a statistically linked mex file instead of
+% dynamic linking.
 %
 % Example:
 %
-% The following assumes dependent libraries are located at /opt/local.
-% Replace the path to where sqlite3, boost is installed in the system.
-%
-% Static linking
-%
-% >> sqlite3.make('--libsqlite3_path',     '/opt/local/lib/libsqlite3.a', ...
-%                 '--libboost_regex_path', '/opt/local/lib/libboost_regex-mt.a', ...
-%                 '-I/opt/local/include');
+% The following example assumes dependent libraries are located at
+% non-standard location /opt/local. Replace the path to where sqlite3 and
+% boost is installed in the system.
 %
 % Dynamic linking
 %
 % >> sqlite3.make('-I/opt/local/include', '-L/opt/local/lib');
 %
+% Static linking
+%
+% >> sqlite3.make('--libsqlite3_path', '/opt/local/lib/libsqlite3.a', ...
+%                 '-I/opt/local/include');
+%
 % See also mex
 
     package_dir = fileparts(mfilename('fullpath'));
     try
-        [sqlite3_path, boost_regex_path, compiler_flags] = ...
-            parse_options(varargin{:});
+        [sqlite3_path, compiler_flags] = parse_options(varargin{:});
         cmd = sprintf([...
-            'mex -largeArrayDims %s %s -outdir %s -output driver %s %s %s'],...
+            'mex -largeArrayDims %s %s -outdir %s -output driver %s %s'],...
             fullfile(package_dir, 'driver.cc'),...
             fullfile(package_dir, 'sqlite3mex.cc'),...
             package_dir,...
             sqlite3_path,...
-            boost_regex_path,...
             strjoin(compiler_flags) ...
             );
         disp(cmd);
@@ -61,18 +53,12 @@ function make(varargin)
 
 end
 
-function [sqlite3_path, boost_regex_path, compiler_flags] = ...
-    parse_options(varargin)
-% parse boost_regex-mt and libsqlite3 options
+function [sqlite3_path, compiler_flags] = parse_options(varargin)
+% parse libsqlite3 options
 
-    boost_regex_path = '-lboost_regex-mt';
     sqlite3_path = '-lsqlite3';
     mark_for_delete = false(size(varargin));
     for i = 1:2:numel(varargin)
-        if strcmp(varargin{i}, '--libboost_regex_path')
-            boost_regex_path = varargin{i+1};
-            mark_for_delete(i:i+1) = true;
-        end
         if strcmp(varargin{i}, '--libsqlite3_path')
             sqlite3_path = varargin{i+1};
             mark_for_delete(i:i+1) = true;
@@ -83,9 +69,9 @@ function [sqlite3_path, boost_regex_path, compiler_flags] = ...
 end
 
 function str = strjoin(compiler_flags)
-% concat array into string
+% concat cellstr into string
 
-    str = cellfun(@(s)[s, ' '],compiler_flags,'UniformOutput',false);
+    str = cellfun(@(s) [s, ' '], compiler_flags, 'UniformOutput', false);
     str = [str{:}];
 
 end

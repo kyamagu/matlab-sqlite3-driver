@@ -18,43 +18,28 @@ installed in the system.
 Compile
 -------
 
-The package comes with sqlite3.make script for compiling. See
+Type `sqlite3.make` in matlab. If it gives an error, continue reading this
+section.
+
+The package comes with sqlite3.make script for compiling. The script can choose
+to build either statically linked binary or dynamically linked binary. See
 `help sqlite3.make` for the detailed usage of the script.
 
-The script can choose to build either statically linked binary or dynamically
-linked binary. In general it is recommended to make a statically linked binary
-if possible. However, if the static version of sqlite3 or boost_regex library
-is not available, use dynamic linking.
-
-The following example assumes libraries are installed under `/opt/local`.
-
-__Static linking__
-
-Specify static library paths and optional compiler flags in the argument.
-
-    >> sqlite3.make('--libsqlite3_path',     '/opt/local/lib/libsqlite3.a', ...
-                    '--libboost_regex_path', '/opt/local/lib/libboost_regex-mt.a', ...
-                    '-I/opt/local/include');
+The following example assumes boost and sqlite3 are installed under
+`/opt/local`.
 
 __Dynamic linking__
 
-Specify optional compiler flags in the argument.
+Specify any optional compiler flags in the argument.
 
     >> sqlite3.make('-I/opt/local/include', '-L/opt/local/lib')
 
-When using dynamically linked binary, you might need to preload the shared
-library on launching matlab. This is because matlab depends on its internal
-boost library which is usually incompatible with the system. Set the
-`LD_PRELOAD` variable on Linux or `DYLD_INSERT_LIBRARIES` variable on Mac OS X
-when starting matlab.
+__Static linking__
 
-Linux:
+Specify static library paths and any optional compiler flags in the argument.
 
-    LD_PRELOAD=/usr/lib/libboost_regex-mt.so matlab
-
-Mac OS X:
-
-    DYLD_INSERT_LIBRARIES=/opt/local/lib/libboost_regex-mt.dylib matlab
+    >> sqlite3.make('--libsqlite3_path', '/opt/local/lib/libsqlite3.a', ...
+                    '-I/opt/local/include');
 
 Usage
 -----
