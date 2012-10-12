@@ -35,21 +35,17 @@ function make(varargin)
 % See also mex
 
     package_dir = fileparts(mfilename('fullpath'));
-    try
-        [sqlite3_path, compiler_flags] = parse_options(varargin{:});
-        cmd = sprintf([...
-            'mex -largeArrayDims %s %s -outdir %s -output driver %s %s'],...
-            fullfile(package_dir, 'driver.cc'),...
-            fullfile(package_dir, 'sqlite3mex.cc'),...
-            package_dir,...
-            sqlite3_path,...
-            strjoin(compiler_flags) ...
-            );
-        disp(cmd);
-        eval(cmd);
-    catch e
-        disp(e.getReport);
-    end
+    [sqlite3_path, compiler_flags] = parse_options(varargin{:});
+    cmd = sprintf([...
+        'mex -largeArrayDims %s %s -outdir %s -output driver %s%s'],...
+        fullfile(package_dir, 'driver.cc'),...
+        fullfile(package_dir, 'sqlite3mex.cc'),...
+        package_dir,...
+        sqlite3_path,...
+        compiler_flags...
+        );
+    disp(cmd);
+    eval(cmd);
 
 end
 
@@ -64,14 +60,6 @@ function [sqlite3_path, compiler_flags] = parse_options(varargin)
             mark_for_delete(i:i+1) = true;
         end
     end
-    compiler_flags = varargin(~mark_for_delete);
-
-end
-
-function str = strjoin(compiler_flags)
-% concat cellstr into string
-
-    str = cellfun(@(s) [s, ' '], compiler_flags, 'UniformOutput', false);
-    str = [str{:}];
+    compiler_flags = sprintf(' %s', varargin{~mark_for_delete});
 
 end
