@@ -119,18 +119,23 @@ int Statement::column_type(int i) const {
   return sqlite3_column_type(statement_, i);
 }
 
-Value& Statement::column_value(int i) {
+const Value& Statement::column_value(int i) {
   switch (column_type(i)) {
     case SQLITE_INTEGER: {
-      value_ = static_cast<IntegerValue>(sqlite3_column_int64(statement_, i));
+      value_.first = SQLITE_INTEGER;
+      value_.second = static_cast<IntegerValue>(
+          sqlite3_column_int64(statement_, i));
       break;
     }
     case SQLITE_FLOAT: {
-      value_ = static_cast<FloatValue>(sqlite3_column_double(statement_, i));
+      value_.first = SQLITE_FLOAT;
+      value_.second = static_cast<FloatValue>(
+          sqlite3_column_double(statement_, i));
       break;
     }
     case SQLITE_TEXT: {
-      value_ = static_cast<TextValue>(reinterpret_cast<const char*>(
+      value_.first = SQLITE_TEXT;
+      value_.second = static_cast<TextValue>(reinterpret_cast<const char*>(
           sqlite3_column_text(statement_, i)));
       break;
     }
@@ -138,11 +143,13 @@ Value& Statement::column_value(int i) {
       const uint8_t* blob = reinterpret_cast<const uint8_t*>(
           sqlite3_column_blob(statement_, i));
       int bytes = sqlite3_column_bytes(statement_, i);
-      value_ = BlobValue(blob, blob + bytes);
+      value_.first = SQLITE_BLOB;
+      value_.second = BlobValue(blob, blob + bytes);
       break;
     }
     case SQLITE_NULL: {
-      value_ = NullValue();
+      value_.first = SQLITE_NULL;
+      value_.second = NullValue();
       break;
     }
   }
@@ -246,7 +253,6 @@ void Database::create_columns(const Statement& stmt, vector<Column>* columns) {
       name = name_builder.str();
     }
     unique_names.insert(name);
-    (*columns)[i].type = stmt.column_type(i);
     (*columns)[i].name = name;
   }
 }
@@ -267,39 +273,38 @@ bool Database::convert_columns_to_array(vector<Column>* columns,
     *array = mxCreateStructMatrix(1, (*columns)[0].values.size(),
                                   columns->size(), &fieldnames[0]);
     for (size_t i = 0; i < columns->size(); ++i){
-      deque<Value>& values = (*columns)[i].values;
-      int type = (*columns)[i].type;
+      deque<Value>* values = &(*columns)[i].values;
       mwSize j = 0;
-      while (!values.empty()) {
-        mxArray* element = convert_value_to_array(values.front(), type);
+      while (!values->empty()) {
+        mxArray* element = convert_value_to_array(values->front());
         mxSetFieldByNumber(*array, j++, i, element);
-        values.pop_front();
+        values->pop_front();
       }
     }
   }
   return true;
 }
 
-mxArray* Database::convert_value_to_array(const Value& value, int type) {
+mxArray* Database::convert_value_to_array(const Value& value) {
   mxArray* array = NULL;
-  switch (type) {
+  switch (value.first) {
     case SQLITE_INTEGER: {
       //array = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
       //*reinterpret_cast<IntegerValue*>(mxGetData(array)) =
       //    static_cast<IntegerValue>(boost::get<IntegerValue>(value));
-      array = mxCreateDoubleScalar(boost::get<IntegerValue>(value));
+      array = mxCreateDoubleScalar(boost::get<IntegerValue>(value.second));
       break;
     }
     case SQLITE_FLOAT: {
-      array = mxCreateDoubleScalar(boost::get<FloatValue>(value));
+      array = mxCreateDoubleScalar(boost::get<FloatValue>(value.second));
       break;
     }
     case SQLITE_TEXT: {
-      array = mxCreateString(boost::get<TextValue>(value).c_str());
+      array = mxCreateString(boost::get<TextValue>(value.second).c_str());
       break;
     }
     case SQLITE_BLOB: {
-      const BlobValue& blob = boost::get<BlobValue>(value);
+      const BlobValue& blob = boost::get<BlobValue>(value.second);
       array = mxCreateNumericMatrix(1, blob.size(), mxUINT8_CLASS, mxREAL);
       copy(blob.begin(), blob.end(),
            reinterpret_cast<uint8_t*>(mxGetData(array)));

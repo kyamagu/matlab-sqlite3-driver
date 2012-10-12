@@ -29,11 +29,10 @@ typedef vector<uint8_t> BlobValue;
 // Null value class.
 typedef class _NullValue {} NullValue;
 // Value of the sqlite row.
-typedef boost::variant<IntegerValue, FloatValue, TextValue, BlobValue,
-                       NullValue> Value;
+typedef pair<int, boost::variant<IntegerValue, FloatValue, TextValue,
+    BlobValue, NullValue> > Value;
 // Column of the query result.
 typedef struct {
-  int type;            // Type of the column.
   string name;         // Name of the column.
   deque<Value> values; // Values of the column.
 } Column;
@@ -75,7 +74,7 @@ public:
   int column_type(int i) const;
   // Column value. The statement must be in ROW code. i.e., row() == true.
   // Caller is responsible for freeing (i.e., mxFree()) mxArray* after use.
-  Value& column_value(int i);
+  const Value& column_value(int i);
 
 private:
   // Prepared statement.
@@ -133,7 +132,7 @@ private:
   // Convert vector<Column> to mxArray*.
   bool convert_columns_to_array(vector<Column>* columns, mxArray** array);
   // Convert Value object to mxArray*.
-  mxArray* convert_value_to_array(const Value& value, int type);
+  mxArray* convert_value_to_array(const Value& value);
 
   // Statement cache.
   StatementCache statement_cache_;
