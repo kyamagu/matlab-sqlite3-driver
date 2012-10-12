@@ -120,6 +120,10 @@ int Statement::column_type(int i) const {
 }
 
 const Value& Statement::column_value(int i) {
+  // It is possible to directly create an mxArray* here. However, due to the
+  // memory allocation pattern in Matlab, it is much more efficient to use
+  // store the result of the query into temporary storage and later convert
+  // the value to mxArray* after we find the number of rows.
   switch (column_type(i)) {
     case SQLITE_INTEGER: {
       value_.first = SQLITE_INTEGER;
@@ -160,7 +164,7 @@ StatementCache::StatementCache(size_t cache_size) : cache_size_(cache_size) {}
 
 StatementCache::~StatementCache() {}
 
-Statement& StatementCache::get(const string& statement, sqlite3* database) {
+Statement* StatementCache::get(const string& statement, sqlite3* database) {
   CacheMap::iterator entry = table_.find(statement);
   // Cache miss.
   if (entry == table_.end()) {
@@ -172,7 +176,7 @@ Statement& StatementCache::get(const string& statement, sqlite3* database) {
       fifo_.pop_back();
     }
   }
-  return entry->second;
+  return &entry->second;
 }
 
 Database::Database() : database_(NULL) {}
@@ -200,42 +204,42 @@ string Database::error_message() {
   return sqlite3_errmsg(database_);
 }
 
-bool Database::execute(const string& statement, 
+bool Database::execute(const string& statement_string, 
                        const vector<const mxArray*>& params,
                        mxArray** result) {
   if (!result)
     return false;
-  Statement& stmt = statement_cache_.get(statement, database_);
-  if (!stmt.reset() || !stmt.bind(params))
+  Statement* statement = statement_cache_.get(statement_string, database_);
+  if (!statement->reset() || !statement->bind(params))
     return false;
+  // Due to the 
   vector<Column> columns;
   bool first_row = true;
-  while (stmt.step()) {
-    // Fill in the column names at the beginning.
+  while (statement->step()) {
     if (first_row) {
-      create_columns(stmt, &columns);
+      create_columns(*statement, &columns);
       first_row = false;
     }
-    // Append data.
-    for (int i = 0; i < stmt.column_count(); ++i)
-      columns[i].values.push_back(stmt.column_value(i));
+    for (int i = 0; i < statement->column_count(); ++i)
+      columns[i].values.push_back(statement->column_value(i));
   }
   // TODO: check if the columns are valid.
-  return stmt.done() && convert_columns_to_array(&columns, result);
+  return statement->done() && convert_columns_to_array(&columns, result);
 }
 
 bool Database::busy_timeout(int milliseconds) {
   return sqlite3_busy_timeout(database_, milliseconds) == SQLITE_OK;
 }
 
-void Database::create_columns(const Statement& stmt, vector<Column>* columns) {
-  columns->resize(stmt.column_count());
+void Database::create_columns(const Statement& statement,
+                              vector<Column>* columns) {
+  columns->resize(statement.column_count());
   set<string> unique_names;
-  for (int i = 0; i < stmt.column_count(); ++i) {
+  for (int i = 0; i < statement.column_count(); ++i) {
     // Clean column name.
     static const sregex leading_non_alphabets = sregex::compile("^[^a-zA-Z]*");
     static const sregex non_alphanumerics = sregex::compile("[^a-zA-Z0-9]+");
-    string name = boost::xpressive::regex_replace(stmt.column_name(i),
+    string name = boost::xpressive::regex_replace(statement.column_name(i),
                                                   leading_non_alphabets,
                                                   "");
     name = boost::xpressive::regex_replace(name, non_alphanumerics, " ");

@@ -28,7 +28,7 @@ typedef string TextValue;
 typedef vector<uint8_t> BlobValue;
 // Null value class.
 typedef class _NullValue {} NullValue;
-// Value of the sqlite row.
+// Value of the sqlite row. A pair of type and value.
 typedef pair<int, boost::variant<IntegerValue, FloatValue, TextValue,
     BlobValue, NullValue> > Value;
 // Column of the query result.
@@ -73,7 +73,6 @@ public:
   // Column type. The statement must be in ROW code. i.e., row() == true.
   int column_type(int i) const;
   // Column value. The statement must be in ROW code. i.e., row() == true.
-  // Caller is responsible for freeing (i.e., mxFree()) mxArray* after use.
   const Value& column_value(int i);
 
 private:
@@ -85,20 +84,26 @@ private:
   Value value_;
 };
 
-// Cache for statements.
+// Cache for the prepared statements. It looks up the prepared SQL statement
+// in the hash map, and if not found, compiles a new statement. The cache
+// entries are maintained by the fifo so that oldest entry is removed when
+// the size exceeds the maximum limit.
 class StatementCache {
 public:
+  // Hash map to the prepared statement.
   typedef boost::unordered_map<string, Statement> CacheMap;
+  // Default cache size.
   static const int DEFAULT_CACHE_SIZE = 10;
 
+  // Create a default cache.
   StatementCache(size_t cache_size = DEFAULT_CACHE_SIZE);
+  // Cache destructor.
   ~StatementCache();
-
   // Get the cached statement.
-  Statement& get(const string& statement, sqlite3* database);
+  Statement* get(const string& statement, sqlite3* database);
 
 private:
-  // FIFO.
+  // FIFO to maintain generation of the keys.
   deque<string> fifo_;
   // Lookup table.
   CacheMap table_;
@@ -166,6 +171,13 @@ private:
 };
 
 // Abstract operation class. Child class must implement run() method.
+// The static method parse is a factory method to create operations.
+//
+// Usage:
+//
+//    auto_ptr<Operation> operation(Operation::parse(nrhs, prhs));
+//    operation->run(nlhs, plhs);
+//
 class Operation {
 public:
   // State definition for the parser.
