@@ -1,4 +1,11 @@
-// sqlite3 driver library.
+// Sqlite3 matlab driver library.
+//
+// Kota Yamaguchi 2012 <kyamagu@cs.stonybrook.edu>
+
+#include <boost/algorithm/string.hpp>
+#include <boost/xpressive/xpressive.hpp>
+#include <set>
+#include <sstream>
 #include "sqlite3mex.h"
 
 using boost::xpressive::sregex;
@@ -42,10 +49,9 @@ bool Statement::reset() {
 }
 
 bool Statement::bind(const vector<const mxArray*>& params) {
-  if (params.size() != sqlite3_bind_parameter_count(statement_))
-    mexErrMsgIdAndTxt("sqlite3mex:error", "Wrong parameters: %d for %d.",
-      params.size(),
-      sqlite3_bind_parameter_count(statement_));
+  int num_binds = sqlite3_bind_parameter_count(statement_);
+  if (params.size() != num_binds)
+    ERROR("Wrong number of parameters: %d for %d.", params.size(), num_binds);
   code_ = sqlite3_clear_bindings(statement_);
   if (!ok())
     false;
@@ -248,7 +254,7 @@ void Database::create_columns(const Statement& statement,
     boost::algorithm::to_lower(name);
     if (name.empty())
       name = "field";
-    // Find unique name for the duplicated column.
+    // Find a unique name for the duplicated column.
     int index = 0;
     string original_name(name);
     while (unique_names.find(name) != unique_names.end()) {
@@ -293,6 +299,8 @@ mxArray* Database::convert_value_to_array(const Value& value) {
   mxArray* array = NULL;
   switch (value.first) {
     case SQLITE_INTEGER: {
+      // Integer types in matlab is very restricted. Therefore, here we convert
+      // to double by default.
       //array = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
       //*reinterpret_cast<IntegerValue*>(mxGetData(array)) =
       //    static_cast<IntegerValue>(boost::get<IntegerValue>(value));
@@ -320,7 +328,7 @@ mxArray* Database::convert_value_to_array(const Value& value) {
     }
   }
   if (!array)
-    mexErrMsgIdAndTxt("sqlite3mex:error", "Null pointer exception.");
+    ERROR("Null pointer exception.");
   return array;
 }
 
@@ -330,8 +338,7 @@ DatabaseManager::~DatabaseManager() {}
 
 int DatabaseManager::open(const string& filename) {
   if (!connections_[++last_id_].open(filename))
-    mexErrMsgIdAndTxt("sqlite3mex:error",
-                      "Unable to open: %s.", filename.c_str());
+    ERROR("Unable to open: %s.", filename.c_str());
   return last_id_;
 }
 
@@ -354,7 +361,7 @@ bool DatabaseManager::verify_id(int id) const {
 Database* DatabaseManager::get(int id) {
   map<int, Database>::iterator connection = connections_.find(id);
   if (connection == connections_.end())
-    mexErrMsgIdAndTxt("sqlite3mex:error", "Invalid id: %d", id);
+    ERROR("Invalid id: %d", id);
   return &connection->second;
 }
 
@@ -369,25 +376,22 @@ Operation* Operation::parse(int nrhs, const mxArray *prhs[]) {
   while (state != PARSER_FINISH) {
     switch (state) {
       case PARSER_INIT: {
-        if (it == input.end()) {
-          mexErrMsgIdAndTxt("sqlite3:error", "Invalid input.");
-        }
-        else if (mxIsChar(*it)) {
+        if (it == input.end())
+          ERROR("Invalid argument.");
+        else if (mxIsChar(*it))
           id = manager()->default_id();
-        }
         else if (mxIsDouble(*it)) {
           id = mxGetScalar(*it);
           ++it;
         }
         else
-          mexErrMsgIdAndTxt("sqlite3:error", "Invalid argument.");
+          ERROR("Invalid argument.");
         state = PARSER_ID;
         break;
       }
       case PARSER_ID: {
-        if (it == input.end()) {
-          mexErrMsgIdAndTxt("sqlite3:error", "Invalid input.");
-        }
+        if (it == input.end())
+          ERROR("Invalid argument.");
         else if (mxIsChar(*it)) {
           string arg(mxGetChars(*it),
                      mxGetChars(*it) + mxGetNumberOfElements(*it));
@@ -407,12 +411,11 @@ Operation* Operation::parse(int nrhs, const mxArray *prhs[]) {
             operation.reset(new TimeoutOperation());
             ++it;
           }
-          else { // operation omitted.
+          else // operation omitted.
             operation.reset(new ExecuteOperation());
-          }
         }
         else
-          mexErrMsgIdAndTxt("sqlite3:error", "Invalid argument.");
+          ERROR("Invalid argument.");
         operation->id_ = id;
         state = PARSER_CMD;
         break;
@@ -422,9 +425,10 @@ Operation* Operation::parse(int nrhs, const mxArray *prhs[]) {
         state = PARSER_FINISH;
         break;
       }
-      case PARSER_FINISH:
-        mexErrMsgIdAndTxt("sqlite3:error", "Fatal error.");
+      case PARSER_FINISH: {
+        ERROR("Fatal error.");
         break;
+      }
     }
   }
   return operation.release();
@@ -432,10 +436,10 @@ Operation* Operation::parse(int nrhs, const mxArray *prhs[]) {
 
 void OpenOperation::run(int nlhs, mxArray* plhs[]) {
   if (nlhs > 1)
-    mexErrMsgIdAndTxt("sqlite3:error", "Too many output: %d for 1.", nlhs);
+    ERROR("Too many output: %d for 1.", nlhs);
   const vector<const mxArray*>& args = arguments();
   if (args.size() != 1 || !mxIsChar(args[0]))
-    mexErrMsgIdAndTxt("sqlite3:error", "Failed to parse filename.");
+    ERROR("Failed to parse filename.");
   string filename(mxGetChars(args[0]),
                   mxGetChars(args[0]) + mxGetNumberOfElements(args[0]));
   plhs[0] = mxCreateDoubleScalar(manager()->open(filename));
@@ -443,37 +447,35 @@ void OpenOperation::run(int nlhs, mxArray* plhs[]) {
 
 void CloseOperation::run(int nlhs, mxArray* plhs[]) {
   if (nlhs)
-    mexErrMsgIdAndTxt("sqlite3:error", "Too many output: %d for 0.", nlhs);
+    ERROR("Too many output: %d for 0.", nlhs);
   if (arguments().size() != 0)
-    mexErrMsgIdAndTxt("sqlite3:error", "Too many input.");
+    ERROR("Too many input.");
   manager()->close(id());
 }
 
 void ExecuteOperation::run(int nlhs, mxArray* plhs[]) {
   if (nlhs > 1)
-    mexErrMsgIdAndTxt("sqlite3:error", "Too many output: %d for 1.", nlhs);
+    ERROR("Too many output: %d for 1.", nlhs);
   const vector<const mxArray*>& args = arguments();
   if (args.empty() || !mxIsChar(args[0]))
-    mexErrMsgIdAndTxt("sqlite3:error", "Failed to parse sql statement.");
+    ERROR("Failed to parse sql statement.");
   sqlite3mex::Database* connection = manager()->get(id());
   string sql(mxGetChars(args[0]),
              mxGetChars(args[0]) + mxGetNumberOfElements(args[0]));
   vector<const mxArray*> params(args.begin() + 1, args.end());
   if (!connection->execute(sql, params, &plhs[0]))
-    mexErrMsgIdAndTxt("sqlite3mex:error", "%s: %s",
-                      connection->error_message().c_str(),
-                      sql.c_str());
+    ERROR("%s: %s", connection->error_message().c_str(), sql.c_str());
 }
 
 void TimeoutOperation::run(int nlhs, mxArray* plhs[]) {
   if (nlhs)
-    mexErrMsgIdAndTxt("sqlite3:error", "Too many output: %d for 1.", nlhs);
+    ERROR("Too many output: %d for 1.", nlhs);
   const vector<const mxArray*>& args = arguments();
   if (args.size() != 1 || !mxIsNumeric(args[0]) ||
       mxGetNumberOfElements(args[0]) != 1)
-    mexErrMsgIdAndTxt("sqlite3:error", "Invalid argument for timeout.");
+    ERROR("Invalid argument for timeout.");
   if (!manager()->get(id())->busy_timeout(mxGetScalar(args[0])))
-    mexErrMsgIdAndTxt("sqlite3:error", "Failed to set timeout.");
+    ERROR("Failed to set timeout.");
 }
 
 } // namespace sqlite3mex

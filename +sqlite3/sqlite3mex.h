@@ -1,20 +1,21 @@
-// sqlite3 driver library.
-#include <boost/algorithm/string.hpp>
+// Sqlite3 matlab driver library.
+//
+// Kota Yamaguchi 2012 <kyamagu@cs.stonybrook.edu>
+
 #include <boost/unordered_map.hpp>
 #include <boost/variant.hpp>
-#include <boost/xpressive/xpressive.hpp>
 #include <deque>
 #include <map>
-#include <memory>
 #include <mex.h>
-#include <set>
 #include <sqlite3.h>
-#include <sstream>
 #include <stdint.h>
 #include <string>
 #include <vector>
 
 using namespace std;
+
+// Alias for the mex error function.
+#define ERROR(...) mexErrMsgIdAndTxt("sqlite3:error", __VA_ARGS__)
 
 namespace sqlite3mex {
 

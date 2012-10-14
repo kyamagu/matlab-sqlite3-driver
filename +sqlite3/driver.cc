@@ -1,7 +1,8 @@
-// Sqlite3 matlab driver.
+// Sqlite3 matlab driver main.
 //
 // Kota Yamaguchi 2012 <kyamagu@cs.stonybrook.edu>
 
+#include <memory>
 #include "sqlite3mex.h"
 
 using sqlite3mex::Operation;
