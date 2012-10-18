@@ -26,7 +26,8 @@ to build either statically linked binary or dynamically linked binary. See
 `help sqlite3.make` for the detailed usage of the script.
 
 The following example assumes boost and sqlite3 are installed under
-`/opt/local`.
+`/opt/local`. In a typical Linux environment, `sqlite3.make` doesn't need any
+argument.
 
 __Dynamic linking__
 
@@ -44,14 +45,14 @@ Specify static library paths and any optional compiler flags in the argument.
 Usage
 -----
 
-The mex function `sqlite3.driver` supports following operations.
+The mex function `sqlite3.driver` supports the following operations.
 
     Operation Description
-    --------- ---------------------------------------
+    --------- ----------------------------------------
     open      Open a database.
     close     Close a database connection.
     execute   Execute an SQLite statement.
-    timeout   Set timeout value when databse is busy.
+    timeout   Set timeout value when database is busy.
 
 The function accepts following argument syntax.
 
@@ -97,17 +98,18 @@ The `'execute'` argument is optional.
 
 The sql statement can use binding of the value through `?` as the placeholder.
 When the binding is used, there must be the corresponding number of parameters
-followed by the sql statement.
+followed by the sql statement. Bind values can be a numeric scalar value,
+string, uint8 array for blob, or empty array for null.
 
 Results are returned as a struct array.
 
 Example:
 
-    >> result = sqlite3.driver(db, 'execute', 'SELECT * FROM table')
-    >> result = sqlite3.driver(db, 'SELECT * FROM table')
-    >> result = sqlite3.driver('execute', 'SELECT * FROM table')
-    >> result = sqlite3.driver('SELECT * FROM table')
-    >> result = sqlite3.driver('SELECT * FROM table WHERE rowid = ? OR name = ?', 1, 'foo')
+    >> result = sqlite3.driver(db, 'execute', 'SELECT * FROM records')
+    >> result = sqlite3.driver(db, 'SELECT * FROM records')
+    >> result = sqlite3.driver('execute', 'SELECT * FROM records')
+    >> result = sqlite3.driver('SELECT * FROM records')
+    >> result = sqlite3.driver('SELECT * FROM records WHERE rowid = ? OR name = ?', 1, 'foo')
 
 __timeout__
 

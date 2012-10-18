@@ -117,7 +117,7 @@ int Statement::data_count() const {
   return sqlite3_data_count(statement_);
 }
 
-string Statement::column_name(int i) const {
+const char* Statement::column_name(int i) const {
   return sqlite3_column_name(statement_, i);
 }
 
@@ -127,9 +127,9 @@ int Statement::column_type(int i) const {
 
 const Value& Statement::column_value(int i) {
   // It is possible to directly create an mxArray* here. However, due to the
-  // memory allocation pattern in Matlab, it is much more efficient to use
-  // store the result of the query into temporary storage and later convert
-  // the value to mxArray* after we find the number of rows.
+  // memory allocation pattern in Matlab, it is faster to keep the result into
+  // a temporary storage and convert the values to mxArray* after we find
+  // the number of rows.
   switch (column_type(i)) {
     case SQLITE_INTEGER: {
       value_.first = SQLITE_INTEGER;
@@ -206,7 +206,7 @@ int Database::error_code() {
   return sqlite3_errcode(database_);
 }
 
-string Database::error_message() {
+const char* Database::error_message() {
   return sqlite3_errmsg(database_);
 }
 
@@ -218,7 +218,6 @@ bool Database::execute(const string& statement_string,
   Statement* statement = statement_cache_.get(statement_string, database_);
   if (!statement->reset() || !statement->bind(params))
     return false;
-  // Due to the 
   vector<Column> columns;
   bool first_row = true;
   while (statement->step()) {
@@ -242,12 +241,11 @@ void Database::create_columns(const Statement& statement,
   columns->resize(statement.column_count());
   set<string> unique_names;
   for (int i = 0; i < statement.column_count(); ++i) {
-    // Clean column name.
+    // Clean the column name.
     static const sregex leading_non_alphabets = sregex::compile("^[^a-zA-Z]*");
     static const sregex non_alphanumerics = sregex::compile("[^a-zA-Z0-9]+");
-    string name = boost::xpressive::regex_replace(statement.column_name(i),
-                                                  leading_non_alphabets,
-                                                  "");
+    string name(statement.column_name(i));
+    name = boost::xpressive::regex_replace(name, leading_non_alphabets, "");
     name = boost::xpressive::regex_replace(name, non_alphanumerics, " ");
     boost::algorithm::trim(name);
     boost::algorithm::replace_all(name, " ", "_");
@@ -299,8 +297,8 @@ mxArray* Database::convert_value_to_array(const Value& value) {
   mxArray* array = NULL;
   switch (value.first) {
     case SQLITE_INTEGER: {
-      // Integer types in matlab is very restricted. Therefore, here we convert
-      // to double by default.
+      // Integer types in matlab are very restricted. Convert them to double
+      // by default.
       //array = mxCreateNumericMatrix(1, 1, mxINT64_CLASS, mxREAL);
       //*reinterpret_cast<IntegerValue*>(mxGetData(array)) =
       //    static_cast<IntegerValue>(boost::get<IntegerValue>(value));
@@ -328,7 +326,7 @@ mxArray* Database::convert_value_to_array(const Value& value) {
     }
   }
   if (!array)
-    ERROR("Null pointer exception.");
+    ERROR("Failed to create mxArray.");
   return array;
 }
 
@@ -352,10 +350,6 @@ int DatabaseManager::default_id() const {
 
 int DatabaseManager::last_id() const {
   return last_id_;
-}
-
-bool DatabaseManager::verify_id(int id) const {
-  return connections_.find(id) != connections_.end();
 }
 
 Database* DatabaseManager::get(int id) {
@@ -464,7 +458,7 @@ void ExecuteOperation::run(int nlhs, mxArray* plhs[]) {
              mxGetChars(args[0]) + mxGetNumberOfElements(args[0]));
   vector<const mxArray*> params(args.begin() + 1, args.end());
   if (!connection->execute(sql, params, &plhs[0]))
-    ERROR("%s: %s", connection->error_message().c_str(), sql.c_str());
+    ERROR("%s: %s", connection->error_message(), sql.c_str());
 }
 
 void TimeoutOperation::run(int nlhs, mxArray* plhs[]) {

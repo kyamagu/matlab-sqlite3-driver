@@ -30,7 +30,7 @@ typedef string TextValue;
 // Blob value class.
 typedef vector<uint8_t> BlobValue;
 // Null value class.
-typedef class _NullValue {} NullValue;
+typedef struct {} NullValue;
 // Value of the sqlite row. A pair of type and value.
 typedef pair<int, boost::variant<IntegerValue, FloatValue, TextValue,
     BlobValue, NullValue> > Value;
@@ -72,7 +72,7 @@ public:
   // Data count. The statement must be in ROW code. i.e., row() == true.
   int data_count() const;
   // Column name. The statement must be in ROW code. i.e., row() == true.
-  string column_name(int i) const;
+  const char* column_name(int i) const;
   // Column type. The statement must be in ROW code. i.e., row() == true.
   int column_type(int i) const;
   // Column value. The statement must be in ROW code. i.e., row() == true.
@@ -83,7 +83,7 @@ private:
   sqlite3_stmt* statement_;
   // Return code.
   int code_;
-  // Current value
+  // Current value.
   Value value_;
 };
 
@@ -124,7 +124,7 @@ public:
   // Return the last error code.
   int error_code();
   // Return the last error message.
-  string error_message();
+  const char* error_message();
   // Execute SQL statement.
   bool execute(const string& statement,
                const vector<const mxArray*>& params,
@@ -135,7 +135,7 @@ public:
 private:
   // Close the connection.
   void close();
-  // Fill in types and matlab-safe column names.
+  // Make columns and fill in matlab-safe column names.
   void create_columns(const Statement& stmt, vector<Column>* columns);
   // Convert vector<Column> to mxArray*.
   bool convert_columns_to_array(vector<Column>* columns, mxArray** array);
@@ -161,8 +161,6 @@ public:
   int default_id() const;
   // Last id.
   int last_id() const;
-  // Verify id.
-  bool verify_id(int id) const;
   // Get the connection.
   Database* get(int id);
 
@@ -174,9 +172,7 @@ private:
 };
 
 // Abstract operation class. Child class must implement run() method.
-// The static method parse is a factory method to create operations.
-//
-// Usage:
+// The static method parse() is a factory method to create an instance.
 //
 //    auto_ptr<Operation> operation(Operation::parse(nrhs, prhs));
 //    operation->run(nlhs, plhs);
