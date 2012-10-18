@@ -1,6 +1,8 @@
 // Sqlite3 matlab driver library.
 //
 // Kota Yamaguchi 2012 <kyamagu@cs.stonybrook.edu>
+#ifndef __SQLITE3MEX_H__
+#define __SQLITE3MEX_H__
 
 #include <boost/unordered_map.hpp>
 #include <boost/variant.hpp>
@@ -246,3 +248,5 @@ public:
 };
 
 } // namespace sqlite3mex
+
+#endif // __SQLITE3MEX_H__
