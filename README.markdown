@@ -98,7 +98,7 @@ The `'execute'` argument is optional.
 
 The sql statement can use binding of the value through `?` as the placeholder.
 When binding is used, there must be corresponding number of parameters
-followed by the sql statement. Bind values can be a numeric scalar value,
+following the sql statement. Bind values can be a numeric scalar value,
 string, uint8 array for blob, or empty array for null.
 
 Results are returned as a struct array.
