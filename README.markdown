@@ -56,13 +56,13 @@ The mex function `sqlite3.driver` supports the following operations.
 
 The function accepts following argument syntax.
 
-    sqlite3.driver([db,] [operation,] [argment1, argument2, ...])
+    [result] = sqlite3.driver([db,] [operation,] [argment1, argument2, ...])
 
 See the following for the detailed specification of the syntax.
 
 __open__
 
-    [db] = sqlite3.driver('open', filename)
+    db = sqlite3.driver('open', filename)
 
 The open operation takes a file name of the database and returns newly created
 connection id. This id can be used for this connection until closed.
@@ -87,10 +87,10 @@ Example:
 
 __execute__
 
-    [result] = sqlite3.driver(db, 'execute', sql, param1, param2, ...)
-    [result] = sqlite3.driver(db, sql, param1, param2, ...)
-    [result] = sqlite3.driver('execute', sql, param1, param2, ...)
-    [result] = sqlite3.driver(sql, param1, param2, ...)
+    result = sqlite3.driver(db, 'execute', sql, param1, param2, ...)
+    result = sqlite3.driver(db, sql, param1, param2, ...)
+    result = sqlite3.driver('execute', sql, param1, param2, ...)
+    result = sqlite3.driver(sql, param1, param2, ...)
 
 The execute operation apply sql staement `sql` in the database specified by
 the connection id `db`. When `db` is omitted, default connection is used.
@@ -110,6 +110,13 @@ Example:
     >> result = sqlite3.driver('execute', 'SELECT * FROM records')
     >> result = sqlite3.driver('SELECT * FROM records')
     >> result = sqlite3.driver('SELECT * FROM records WHERE rowid = ? OR name = ?', 1, 'foo')
+    >> result = sqlite3.driver('INSERT INTO records VALUES (?)', 'bar')
+
+Meta-data can be retrieved from `sqlite_master` table or from `PRAGMA` statement.
+
+    >> tables = sqlite3.driver('SELECT * FROM sqlite_master WHERE type="table"')
+    >> indices = sqlite3.driver('SELECT * FROM sqlite_master WHERE type="index"')
+    >> columns = sqlite3.driver('PRAGMA TABLE_INFO(records)')
 
 __timeout__
 
