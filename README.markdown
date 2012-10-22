@@ -97,7 +97,7 @@ the connection id `db`. When `db` is omitted, default connection is used.
 The `'execute'` argument is optional.
 
 The sql statement can use binding of the value through `?` as the placeholder.
-When the binding is used, there must be the corresponding number of parameters
+When binding is used, there must be corresponding number of parameters
 followed by the sql statement. Bind values can be a numeric scalar value,
 string, uint8 array for blob, or empty array for null.
 
