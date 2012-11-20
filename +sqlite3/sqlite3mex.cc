@@ -174,7 +174,10 @@ Statement* StatementCache::get(const string& statement, sqlite3* database) {
   CacheMap::iterator entry = table_.find(statement);
   // Cache miss.
   if (entry == table_.end()) {
-    table_[statement].prepare(statement, database);
+    if (!table_[statement].prepare(statement, database)) {
+      table_.erase(statement);
+      return NULL;
+    }
     fifo_.push_front(statement);
     entry = table_.find(statement);
     if (fifo_.size() > cache_size_) {
@@ -216,7 +219,7 @@ bool Database::execute(const string& statement_string,
   if (!result)
     return false;
   Statement* statement = statement_cache_.get(statement_string, database_);
-  if (!statement->reset() || !statement->bind(params))
+  if (!statement || !statement->reset() || !statement->bind(params))
     return false;
   vector<Column> columns;
   bool first_row = true;
