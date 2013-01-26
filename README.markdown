@@ -77,7 +77,6 @@ Results are returned as a struct array.
 
 Example:
 
-    >> results = sqlite3.execute(db_id, 'execute', 'SELECT * FROM records')
     >> results = sqlite3.execute(db_id, 'SELECT * FROM records')
     >> results = sqlite3.execute('SELECT * FROM records')
     >> results = sqlite3.execute('SELECT * FROM records WHERE rowid = ? OR name = ?', 1, 'foo')
