@@ -53,8 +53,8 @@ Example:
 
 __close__
 
-    sqlite3.close('close', db_id)
-    sqlite3.close('close')
+    sqlite3.close(db_id)
+    sqlite3.close()
 
 The close operation closes the connection to the database specified by the
 connection id `db_id`. When `db_id` is omitted, the default connection is
