@@ -179,14 +179,6 @@ private:
 //
 class Operation {
 public:
-  // State definition for the parser.
-  typedef enum {
-    PARSER_INIT,
-    PARSER_ID,
-    PARSER_CMD,
-    PARSER_FINISH
-  } PARSER_STATE;
-
   // Destructor.
   virtual ~Operation() {}
   // Factory method for operation. Takes rhs of the mexFunction and return
@@ -198,21 +190,15 @@ public:
 
 protected:
   // Default constructor is prohibited. Use parse() method.
-  Operation() : id_(0) {}
-  // Accessor for the id.
-  int id() const { return id_; }
-  // Accessor for the operation arguments.
-  const vector<const mxArray*>& arguments() { return args_; }
+  Operation() {}
+  // Internal parser.
+  virtual void parse_internal(const vector<const mxArray*>& args) = 0;
   // Accessor for the manager.
   static DatabaseManager* manager() { return &manager_; }
 
 private:
   // Database session manager.
   static DatabaseManager manager_;
-  // Connection id.
-  int id_;
-  // Arguments to the operation.
-  vector<const mxArray*> args_;
 };
 
 // Open operation class.
@@ -220,6 +206,14 @@ class OpenOperation : public Operation {
 public:
   // Open a connection.
   virtual void run(int nlhs, mxArray* plhs[]);
+
+protected:
+  // Parse input arguments.
+  void parse_internal(const vector<const mxArray*>& args);
+
+private:
+  // Name of the file.
+  string filename_;
 };
 
 // Close operation class.
@@ -227,6 +221,14 @@ class CloseOperation : public Operation {
 public:
   // Close the connection.
   virtual void run(int nlhs, mxArray* plhs[]);
+
+protected:
+  // Parse input arguments.
+  void parse_internal(const vector<const mxArray*>& args);
+
+private:
+  // Session id.
+  int id_;
 };
 
 // Execution operation class.
@@ -234,6 +236,18 @@ class ExecuteOperation : public Operation {
 public:
   // Execute a statement.
   virtual void run(int nlhs, mxArray* plhs[]);
+
+protected:
+  // Parse input arguments.
+  void parse_internal(const vector<const mxArray*>& args);
+
+private:
+  // Session id.
+  int id_;
+  // SQL statement.
+  string sql_;
+  // SQL parameters.
+  vector<const mxArray*> params_;
 };
 
 // Timeout operation class.
@@ -241,6 +255,16 @@ class TimeoutOperation : public Operation {
 public:
   // Set or get timeout.
   virtual void run(int nlhs, mxArray* plhs[]);
+
+protected:
+  // Parse input arguments.
+  void parse_internal(const vector<const mxArray*>& args);
+
+private:
+  // Session id.
+  int id_;
+  // Timeout value.
+  int timeout_;
 };
 
 } // namespace sqlite3mex

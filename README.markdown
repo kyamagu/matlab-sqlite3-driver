@@ -18,83 +18,55 @@ installed in the system.
 Compile
 -------
 
-Type `sqlite3.make` in matlab. If it gives an error, continue reading this
-section.
+Type `sqlite3.make` in matlab. This will compile the package with default
+dependency to the installed libraries. If you need to specify where the
+dependent libraries are installed, use add compiler flags to the `sqlite3.make`
+script.
 
-The package comes with sqlite3.make script for compiling. The script can choose
-to build either statically linked binary or dynamically linked binary. See
-`help sqlite3.make` for the detailed usage of the script.
-
-The following example assumes boost and sqlite3 are installed under
-`/opt/local`. In a typical Linux environment, `sqlite3.make` doesn't need any
-argument.
-
-__Dynamic linking__
-
-Specify any optional compiler flags in the argument.
+Example: Use libraries installed at `/opt/local`.
 
     >> sqlite3.make('-I/opt/local/include', '-L/opt/local/lib')
-
-__Static linking__
-
-Specify static library paths and any optional compiler flags in the argument.
-
-    >> sqlite3.make('--libsqlite3_path', '/opt/local/lib/libsqlite3.a', ...
-                    '-I/opt/local/include');
 
 Usage
 -----
 
-The mex function `sqlite3.driver` supports the following operations.
+There are 4 public functions.
 
-    Operation Description
+    Function  Description
     --------- ----------------------------------------
     open      Open a database.
     close     Close a database connection.
     execute   Execute an SQLite statement.
     timeout   Set timeout value when database is busy.
 
-The function accepts following argument syntax.
-
-    [result] = sqlite3.driver([db,] [operation,] [argment1, argument2, ...])
-
-See the following for the detailed specification of the syntax.
-
 __open__
 
-    db = sqlite3.driver('open', filename)
+    db_id = sqlite3.open(filename)
 
 The open operation takes a file name of the database and returns newly created
 connection id. This id can be used for this connection until closed.
 
 Example:
 
-    >> db = sqlite3.driver('open', '/path/to/test.db')
+    >> db_id = sqlite3.open('/path/to/test.db')
 
 
 __close__
 
-    sqlite3.driver(db, 'close')
+    sqlite3.driver('close', db_id)
     sqlite3.driver('close')
 
 The close operation closes the connection to the database specified by the
-connection id `db`. When `db` is omitted, default connection is closed.
-
-Example:
-
-    >> sqlite3.driver(db, 'close')
-    >> sqlite3.driver('close')
+connection id `db_id`. When `db_id` is omitted, the default connection is
+closed.
 
 __execute__
 
-    result = sqlite3.driver(db, 'execute', sql, param1, param2, ...)
-    result = sqlite3.driver(db, sql, param1, param2, ...)
-    result = sqlite3.driver('execute', sql, param1, param2, ...)
-    result = sqlite3.driver(sql, param1, param2, ...)
+    results = sqlite3.execute(db_id, sql, param1, param2, ...)
+    results = sqlite3.execute(sql, param1, param2, ...)
 
 The execute operation apply sql staement `sql` in the database specified by
-the connection id `db`. When `db` is omitted, default connection is used.
-The `'execute'` argument is optional.
+the connection id `db_id`. When `db_id` is omitted, default connection is used.
 
 The sql statement can use binding of the value through `?` as the placeholder.
 When binding is used, there must be corresponding number of parameters
@@ -105,31 +77,29 @@ Results are returned as a struct array.
 
 Example:
 
-    >> result = sqlite3.driver(db, 'execute', 'SELECT * FROM records')
-    >> result = sqlite3.driver(db, 'SELECT * FROM records')
-    >> result = sqlite3.driver('execute', 'SELECT * FROM records')
-    >> result = sqlite3.driver('SELECT * FROM records')
-    >> result = sqlite3.driver('SELECT * FROM records WHERE rowid = ? OR name = ?', 1, 'foo')
-    >> result = sqlite3.driver('INSERT INTO records VALUES (?)', 'bar')
+    >> results = sqlite3.execute(db_id, 'execute', 'SELECT * FROM records')
+    >> results = sqlite3.execute(db_id, 'SELECT * FROM records')
+    >> results = sqlite3.execute('SELECT * FROM records')
+    >> results = sqlite3.execute('SELECT * FROM records WHERE rowid = ? OR name = ?', 1, 'foo')
+    >> results = sqlite3.execute('INSERT INTO records VALUES (?)', 'bar')
 
 Meta-data can be retrieved from `sqlite_master` table or from `PRAGMA` statement.
 
-    >> tables = sqlite3.driver('SELECT * FROM sqlite_master WHERE type="table"')
-    >> indices = sqlite3.driver('SELECT * FROM sqlite_master WHERE type="index"')
-    >> columns = sqlite3.driver('PRAGMA TABLE_INFO(records)')
+    >> tables = sqlite3.execute('SELECT * FROM sqlite_master WHERE type="table"')
+    >> indices = sqlite3.execute('SELECT * FROM sqlite_master WHERE type="index"')
+    >> columns = sqlite3.execute('PRAGMA TABLE_INFO(records)')
 
 __timeout__
 
-    sqlite3.driver(db, 'timeout', millisecond)
-    sqlite3.driver('timeout', millisecond)
+    sqlite3.timeout(db_id, millisecond)
+    sqlite3.timeout(millisecond)
 
 The timeout operation sets how long the driver should wait when the database
 is locked by other processes.
 
 Example:
 
-    >> sqlite3.driver(db, 'timeout', 1000)
-    >> sqlite3.driver('timeout', 1000)
+    >> sqlite3.timeout(1000)
 
 License
 -------

@@ -365,113 +365,106 @@ Database* DatabaseManager::get(int id) {
 DatabaseManager Operation::manager_ = DatabaseManager();
 
 Operation* Operation::parse(int nrhs, const mxArray *prhs[]) {
-  const vector<const mxArray*> input(prhs, prhs + nrhs);
+  if (nrhs < 1)
+    ERROR("Operation missing.");
+  if (!mxIsChar(prhs[0]))
+    ERROR("Invalid operation.");
+
   auto_ptr<Operation> operation;
-  PARSER_STATE state = PARSER_INIT;
-  int id = 0;
-  vector<const mxArray*>::const_iterator it = input.begin();
-  while (state != PARSER_FINISH) {
-    switch (state) {
-      case PARSER_INIT: {
-        if (it == input.end())
-          ERROR("Invalid argument.");
-        else if (mxIsChar(*it))
-          id = manager()->default_id();
-        else if (mxIsDouble(*it)) {
-          id = mxGetScalar(*it);
-          ++it;
-        }
-        else
-          ERROR("Invalid argument.");
-        state = PARSER_ID;
-        break;
-      }
-      case PARSER_ID: {
-        if (it == input.end())
-          ERROR("Invalid argument.");
-        else if (mxIsChar(*it)) {
-          string arg(mxGetChars(*it),
-                     mxGetChars(*it) + mxGetNumberOfElements(*it));
-          if (arg == "open") {
-            operation.reset(new OpenOperation());
-            ++it;
-          }
-          else if (arg == "close") {
-            operation.reset(new CloseOperation());
-            ++it;
-          }
-          else if (arg == "execute") {
-            operation.reset(new ExecuteOperation());
-            ++it;
-          }
-          else if (arg == "timeout") {
-            operation.reset(new TimeoutOperation());
-            ++it;
-          }
-          else // operation omitted.
-            operation.reset(new ExecuteOperation());
-        }
-        else
-          ERROR("Invalid argument.");
-        operation->id_ = id;
-        state = PARSER_CMD;
-        break;
-      }
-      case PARSER_CMD: {
-        operation->args_.assign(it, input.end());
-        state = PARSER_FINISH;
-        break;
-      }
-      case PARSER_FINISH: {
-        ERROR("Fatal error.");
-        break;
-      }
-    }
-  }
+  string operation_name(mxGetChars(prhs[0]),
+                        mxGetChars(prhs[0]) + mxGetNumberOfElements(prhs[0]));
+  vector<const mxArray*> args(prhs + 1, prhs + nrhs);
+
+  if (operation_name == "open")
+    operation.reset(new OpenOperation());
+  else if (operation_name == "close")
+    operation.reset(new CloseOperation());
+  else if (operation_name == "execute")
+    operation.reset(new ExecuteOperation());
+  else if (operation_name == "timeout")
+    operation.reset(new TimeoutOperation());
+  else
+    ERROR("Invalid operation: %s.", operation_name.c_str());
+
+  operation->parse_internal(args);
   return operation.release();
+}
+
+void OpenOperation::parse_internal(const vector<const mxArray*>& args) {
+  if (args.empty())
+    ERROR("Missing filename.");
+  if (args.size() > 1)
+    ERROR("Too many input: %d for 1.", args.size());
+  if (!mxIsChar(args[0]))
+    ERROR("Invalid filename.");
+  filename_.assign(mxGetChars(args[0]),
+                   mxGetChars(args[0]) + mxGetNumberOfElements(args[0]));
 }
 
 void OpenOperation::run(int nlhs, mxArray* plhs[]) {
   if (nlhs > 1)
     ERROR("Too many output: %d for 1.", nlhs);
-  const vector<const mxArray*>& args = arguments();
-  if (args.size() != 1 || !mxIsChar(args[0]))
-    ERROR("Failed to parse filename.");
-  string filename(mxGetChars(args[0]),
-                  mxGetChars(args[0]) + mxGetNumberOfElements(args[0]));
-  plhs[0] = mxCreateDoubleScalar(manager()->open(filename));
+  plhs[0] = mxCreateDoubleScalar(manager()->open(filename_));
+}
+
+void CloseOperation::parse_internal(const vector<const mxArray*>& args) {
+  if (args.size() > 1)
+    ERROR("Too many input.");
+  if (args.size() == 1 && mxIsDouble(args[0]))
+    id_ = mxGetScalar(args[0]);
+  else
+    id_ = manager()->default_id();
 }
 
 void CloseOperation::run(int nlhs, mxArray* plhs[]) {
   if (nlhs)
     ERROR("Too many output: %d for 0.", nlhs);
-  if (arguments().size() != 0)
-    ERROR("Too many input.");
-  manager()->close(id());
+  manager()->close(id_);
+}
+
+void ExecuteOperation::parse_internal(const vector<const mxArray*>& args) {
+  vector<const mxArray*>::const_iterator it = args.begin();
+  if (it == args.end())
+    ERROR("Missing input.");
+  if (mxIsDouble(*it)) {
+    id_ = mxGetScalar(*it);
+    ++it;
+  }
+  else
+    id_ = manager()->default_id();
+  if (it == args.end() || !mxIsChar(*it))
+    ERROR("Missing sql statement.");
+  sql_.assign(mxGetChars(*it),
+              mxGetChars(*it) + mxGetNumberOfElements(*it));
+  params_.assign(++it, args.end());
 }
 
 void ExecuteOperation::run(int nlhs, mxArray* plhs[]) {
   if (nlhs > 1)
     ERROR("Too many output: %d for 1.", nlhs);
-  const vector<const mxArray*>& args = arguments();
-  if (args.empty() || !mxIsChar(args[0]))
-    ERROR("Failed to parse sql statement.");
-  sqlite3mex::Database* connection = manager()->get(id());
-  string sql(mxGetChars(args[0]),
-             mxGetChars(args[0]) + mxGetNumberOfElements(args[0]));
-  vector<const mxArray*> params(args.begin() + 1, args.end());
-  if (!connection->execute(sql, params, &plhs[0]))
-    ERROR("%s: %s", connection->error_message(), sql.c_str());
+  sqlite3mex::Database* connection = manager()->get(id_);
+  if (!connection->execute(sql_, params_, &plhs[0]))
+    ERROR("%s: %s", connection->error_message(), sql_.c_str());
+}
+
+void TimeoutOperation::parse_internal(const vector<const mxArray*>& args) {
+  if (args.size() == 1 && mxIsDouble(args[0])) {
+    id_ = manager()->default_id();
+    timeout_ = mxGetScalar(args[0]);
+  }
+  else if (args.size() == 2 && mxIsDouble(args[0]) && mxIsDouble(args[1])) {
+    id_ = mxGetScalar(args[0]);
+    timeout_ = mxGetScalar(args[1]);
+  }
+  else
+    ERROR("Invalid argument.");
 }
 
 void TimeoutOperation::run(int nlhs, mxArray* plhs[]) {
   if (nlhs)
     ERROR("Too many output: %d for 1.", nlhs);
-  const vector<const mxArray*>& args = arguments();
-  if (args.size() != 1 || !mxIsNumeric(args[0]) ||
-      mxGetNumberOfElements(args[0]) != 1)
-    ERROR("Invalid argument for timeout.");
-  if (!manager()->get(id())->busy_timeout(mxGetScalar(args[0])))
+  sqlite3mex::Database* connection = manager()->get(id_);
+  if (!connection->busy_timeout(timeout_))
     ERROR("Failed to set timeout.");
 }
 
