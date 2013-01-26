@@ -68,7 +68,7 @@ __execute__
 The execute operation apply sql staement `sql` in the database specified by
 the connection id `db_id`. When `db_id` is omitted, default connection is used.
 
-The sql statement can use binding of the value through `?` as the placeholder.
+The sql statement can bind values through `?` as a placeholder.
 When binding is used, there must be corresponding number of parameters
 following the sql statement. Bind values can be a numeric scalar value,
 string, uint8 array for blob, or empty array for null.
