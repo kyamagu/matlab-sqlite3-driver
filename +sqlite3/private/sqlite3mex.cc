@@ -348,7 +348,7 @@ void DatabaseManager::close(int id) {
 }
 
 int DatabaseManager::default_id() const {
-  return (connections_.empty()) ? 0 : connections_.begin()->first;
+  return (connections_.empty()) ? 0 : connections_.rbegin()->first;
 }
 
 int DatabaseManager::last_id() const {
