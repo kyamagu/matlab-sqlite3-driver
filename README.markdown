@@ -15,6 +15,15 @@ installed in the system.
  * Boost C++ Library
  * SQLite3
 
+In Unix, these dependencies are usually available in the package manager. For
+example, in Debian/Ubuntu, install packages by:
+
+    $ apt-get install build-essential libsqlite3-dev libboost-dev
+
+In macports, install packages by:
+
+    $ port install sqlite3 boost
+
 Compile
 -------
 
