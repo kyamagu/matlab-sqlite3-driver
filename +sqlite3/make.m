@@ -1,5 +1,5 @@
 function make(varargin)
-%SQLITE3.MAKE Build a driver mex file.
+%MAKE Build a driver mex file.
 %
 %    sqlite3.make(['optionName', optionValue,] [compiler_flags])
 %

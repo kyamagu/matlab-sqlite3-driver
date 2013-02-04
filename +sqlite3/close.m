@@ -1,5 +1,5 @@
 function close( varargin )
-%SQLITE3.CLOSE Close a database.
+%CLOSE Close a database.
 %
 %    sqlite3.close()
 %    sqlite3.close(db_id)

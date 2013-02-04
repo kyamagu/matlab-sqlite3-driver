@@ -1,7 +1,13 @@
 Matlab SQLite3 Driver
 =====================
 
-Matlab driver for SQLite3 database.
+Matlab driver for SQLite3 database. Features include:
+
+ * Simple and clean Matlab API.
+ * Fast C++ MEX implementation.
+ * Parameter binding for an SQL statement.
+ * Multiple database connections.
+ * Easy manipulation of query results as a struct array.
 
 Prerequisite
 ------------
@@ -15,7 +21,7 @@ installed in the system.
  * Boost C++ Library
  * SQLite3
 
-In Unix, these dependencies are usually available in the package manager. For
+In UNIX, these dependencies are usually available in the package manager. For
 example, in Debian/Ubuntu, install packages by:
 
     $ apt-get install build-essential libsqlite3-dev libboost-dev
@@ -30,19 +36,22 @@ Compile
 Type `sqlite3.make` in matlab. This will compile the package with default
 dependency to the installed libraries. If you need to specify where the
 dependent libraries are installed, use add compiler flags to the `sqlite3.make`
-script.
+script. Check the help of `sqlite3.make` for detail.
+
+Example: Compile with the default library.
+
+    >> sqlite3.make;
 
 Example: Use libraries installed at `/opt/local`.
 
-    >> sqlite3.make('-I/opt/local/include', '-L/opt/local/lib')
+    >> sqlite3.make('-I/opt/local/include', '-L/opt/local/lib');
 
-Usage
------
+API
+---
 
-There are 4 public functions.
+There are 4 public functions. All functions are scoped under `sqlite3`
+namespace. Also check `help` of each function.
 
-    Function  Description
-    --------- ----------------------------------------
     open      Open a database.
     close     Close a database connection.
     execute   Execute an SQLite statement.
@@ -57,7 +66,7 @@ connection id. This id can be used for this connection until closed.
 
 Example:
 
-    >> db_id = sqlite3.open('/path/to/test.db')
+    >> db_id = sqlite3.open('/path/to/test.db');
 
 
 __close__
@@ -86,16 +95,16 @@ Results are returned as a struct array.
 
 Example:
 
-    >> results = sqlite3.execute(db_id, 'SELECT * FROM records')
-    >> results = sqlite3.execute('SELECT * FROM records')
-    >> results = sqlite3.execute('SELECT * FROM records WHERE rowid = ? OR name = ?', 1, 'foo')
-    >> results = sqlite3.execute('INSERT INTO records VALUES (?)', 'bar')
+    >> results = sqlite3.execute(db_id, 'SELECT * FROM records');
+    >> results = sqlite3.execute('SELECT * FROM records');
+    >> results = sqlite3.execute('SELECT * FROM records WHERE rowid = ? OR name = ?', 1, 'foo');
+    >> results = sqlite3.execute('INSERT INTO records VALUES (?)', 'bar');
 
 Meta-data can be retrieved from `sqlite_master` table or from `PRAGMA` statement.
 
-    >> tables = sqlite3.execute('SELECT * FROM sqlite_master WHERE type="table"')
-    >> indices = sqlite3.execute('SELECT * FROM sqlite_master WHERE type="index"')
-    >> columns = sqlite3.execute('PRAGMA TABLE_INFO(records)')
+    >> tables = sqlite3.execute('SELECT * FROM sqlite_master WHERE type="table"');
+    >> indices = sqlite3.execute('SELECT * FROM sqlite_master WHERE type="index"');
+    >> columns = sqlite3.execute('PRAGMA TABLE_INFO(records)');
 
 __timeout__
 
@@ -107,7 +116,7 @@ is locked by other processes.
 
 Example:
 
-    >> sqlite3.timeout(1000)
+    >> sqlite3.timeout(1000);
 
 License
 -------

@@ -1,5 +1,5 @@
 function db_id = open( filename )
-%SQLITE3.OPEN Open a new database.
+%OPEN Open a new database.
 %
 %    db_id = sqlite3.open(filename)
 %
