@@ -9,8 +9,8 @@ Matlab driver for SQLite3 database. Features include:
  * Multiple database connections.
  * Easy manipulation of query results as a struct array.
 
-Prerequisite
-------------
+Prerequisites
+-------------
 
 This driver is designed for matlab under UNIX environment.
 
@@ -30,10 +30,10 @@ In macports, install packages by:
 
     $ port install sqlite3 boost
 
-Compile
--------
+Build
+-----
 
-Type `sqlite3.make` in matlab. This will compile the package with default
+Call `sqlite3.make` in matlab. This will compile the package with default
 dependency to the installed libraries. If you need to specify where the
 dependent libraries are installed, use add compiler flags to the `sqlite3.make`
 script. Check the help of `sqlite3.make` for detail.
@@ -62,12 +62,11 @@ __open__
     db_id = sqlite3.open(filename)
 
 The open operation takes a file name of the database and returns newly created
-connection id. This id can be used for this connection until closed.
+connection id. This id can be used for operations until closed.
 
 Example:
 
     >> db_id = sqlite3.open('/path/to/test.db');
-
 
 __close__
 
@@ -75,7 +74,7 @@ __close__
     sqlite3.close()
 
 The close operation closes the connection to the database specified by the
-connection id `db_id`. When `db_id` is omitted, the default connection is
+connection id `db_id`. When `db_id` is omitted, the last opened connection is
 closed.
 
 __execute__
@@ -83,13 +82,14 @@ __execute__
     results = sqlite3.execute(db_id, sql, param1, param2, ...)
     results = sqlite3.execute(sql, param1, param2, ...)
 
-The execute operation apply sql staement `sql` in the database specified by
-the connection id `db_id`. When `db_id` is omitted, default connection is used.
+The execute operation applies a sql statement `sql` in the database specified
+by the connection id `db_id`. When `db_id` is omitted, the last opened
+connection is used.
 
-The sql statement can bind values through `?` as a placeholder.
-When binding is used, there must be corresponding number of parameters
+The sql statement can bind parameters through `?` as a placeholder.
+When binding is used, there must be the corresponding number of parameters
 following the sql statement. Bind values can be a numeric scalar value,
-string, uint8 array for blob, or empty array for null.
+a string, a uint8 array for blob, or an empty array for null.
 
 Results are returned as a struct array.
 
@@ -100,7 +100,7 @@ Example:
     >> results = sqlite3.execute('SELECT * FROM records WHERE rowid = ? OR name = ?', 1, 'foo');
     >> results = sqlite3.execute('INSERT INTO records VALUES (?)', 'bar');
 
-Meta-data can be retrieved from `sqlite_master` table or from `PRAGMA` statement.
+Metadata can be retrieved from `sqlite_master` table or from `PRAGMA` statement.
 
     >> tables = sqlite3.execute('SELECT * FROM sqlite_master WHERE type="table"');
     >> indices = sqlite3.execute('SELECT * FROM sqlite_master WHERE type="index"');
