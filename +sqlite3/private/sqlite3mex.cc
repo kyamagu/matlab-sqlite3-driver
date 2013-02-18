@@ -171,7 +171,8 @@ StatementCache::StatementCache(size_t cache_size) : cache_size_(cache_size) {}
 StatementCache::~StatementCache() {}
 
 Statement* StatementCache::get(const string& statement, sqlite3* database) {
-  CacheMap::iterator entry = table_.find(statement);
+  boost::unordered_map<string, Statement>::iterator entry =
+      table_.find(statement);
   // Cache miss.
   if (entry == table_.end()) {
     if (!table_[statement].prepare(statement, database)) {
@@ -270,7 +271,7 @@ void Database::create_columns(const Statement& statement,
 
 bool Database::convert_columns_to_array(vector<Column>* columns,
                                         mxArray** array) {
-  if (!array)
+  if (array == NULL)
     return false;
   if (columns->empty()) {
     *array = mxCreateDoubleMatrix(0, 0, mxREAL);
@@ -328,144 +329,40 @@ mxArray* Database::convert_value_to_array(const Value& value) {
       break;
     }
   }
-  if (!array)
+  if (array == NULL)
     ERROR("Failed to create mxArray.");
   return array;
 }
 
-DatabaseManager::DatabaseManager() : last_id_(0) {}
-
-DatabaseManager::~DatabaseManager() {}
-
-int DatabaseManager::open(const string& filename) {
-  if (!connections_[++last_id_].open(filename))
+int Session::open(const string& filename) {
+  if (!connections_[++last_id_].open(filename)) {
+    connections_.erase(last_id_);
     ERROR("Unable to open: %s.", filename.c_str());
+  }
   return last_id_;
 }
 
-void DatabaseManager::close(int id) {
+void Session::close(int id) {
   connections_.erase(id);
 }
 
-int DatabaseManager::default_id() const {
+int Session::default_id() {
   return (connections_.empty()) ? 0 : connections_.rbegin()->first;
 }
 
-int DatabaseManager::last_id() const {
+int Session::last_id() {
   return last_id_;
 }
 
-Database* DatabaseManager::get(int id) {
+Database* Session::get(int id) {
   map<int, Database>::iterator connection = connections_.find(id);
   if (connection == connections_.end())
-    ERROR("Invalid id: %d", id);
+    ERROR("Invalid id: %d. Did you open?", id);
   return &connection->second;
 }
 
-DatabaseManager Operation::manager_ = DatabaseManager();
+map<int, Database> Session::connections_;
 
-Operation* Operation::parse(int nrhs, const mxArray *prhs[]) {
-  if (nrhs < 1)
-    ERROR("Operation missing.");
-  if (!mxIsChar(prhs[0]))
-    ERROR("Invalid operation.");
-
-  auto_ptr<Operation> operation;
-  string operation_name(mxGetChars(prhs[0]),
-                        mxGetChars(prhs[0]) + mxGetNumberOfElements(prhs[0]));
-  vector<const mxArray*> args(prhs + 1, prhs + nrhs);
-
-  if (operation_name == "open")
-    operation.reset(new OpenOperation());
-  else if (operation_name == "close")
-    operation.reset(new CloseOperation());
-  else if (operation_name == "execute")
-    operation.reset(new ExecuteOperation());
-  else if (operation_name == "timeout")
-    operation.reset(new TimeoutOperation());
-  else
-    ERROR("Invalid operation: %s.", operation_name.c_str());
-
-  operation->parse_internal(args);
-  return operation.release();
-}
-
-void OpenOperation::parse_internal(const vector<const mxArray*>& args) {
-  if (args.empty())
-    ERROR("Missing filename.");
-  if (args.size() > 1)
-    ERROR("Too many input: %d for 1.", args.size());
-  if (!mxIsChar(args[0]))
-    ERROR("Invalid filename.");
-  filename_.assign(mxGetChars(args[0]),
-                   mxGetChars(args[0]) + mxGetNumberOfElements(args[0]));
-}
-
-void OpenOperation::run(int nlhs, mxArray* plhs[]) {
-  if (nlhs > 1)
-    ERROR("Too many output: %d for 1.", nlhs);
-  plhs[0] = mxCreateDoubleScalar(manager()->open(filename_));
-}
-
-void CloseOperation::parse_internal(const vector<const mxArray*>& args) {
-  if (args.size() > 1)
-    ERROR("Too many input.");
-  if (args.size() == 1 && mxIsDouble(args[0]))
-    id_ = mxGetScalar(args[0]);
-  else
-    id_ = manager()->default_id();
-}
-
-void CloseOperation::run(int nlhs, mxArray* plhs[]) {
-  if (nlhs)
-    ERROR("Too many output: %d for 0.", nlhs);
-  manager()->close(id_);
-}
-
-void ExecuteOperation::parse_internal(const vector<const mxArray*>& args) {
-  vector<const mxArray*>::const_iterator it = args.begin();
-  if (it == args.end())
-    ERROR("Missing input.");
-  if (mxIsDouble(*it)) {
-    id_ = mxGetScalar(*it);
-    ++it;
-  }
-  else
-    id_ = manager()->default_id();
-  if (it == args.end() || !mxIsChar(*it))
-    ERROR("Missing sql statement.");
-  sql_.assign(mxGetChars(*it),
-              mxGetChars(*it) + mxGetNumberOfElements(*it));
-  params_.assign(++it, args.end());
-}
-
-void ExecuteOperation::run(int nlhs, mxArray* plhs[]) {
-  if (nlhs > 1)
-    ERROR("Too many output: %d for 1.", nlhs);
-  sqlite3mex::Database* connection = manager()->get(id_);
-  if (!connection->execute(sql_, params_, &plhs[0]))
-    ERROR("%s: %s", connection->error_message(), sql_.c_str());
-}
-
-void TimeoutOperation::parse_internal(const vector<const mxArray*>& args) {
-  if (args.size() == 1 && mxIsDouble(args[0])) {
-    id_ = manager()->default_id();
-    timeout_ = mxGetScalar(args[0]);
-  }
-  else if (args.size() == 2 && mxIsDouble(args[0]) && mxIsDouble(args[1])) {
-    id_ = mxGetScalar(args[0]);
-    timeout_ = mxGetScalar(args[1]);
-  }
-  else
-    ERROR("Invalid argument.");
-}
-
-void TimeoutOperation::run(int nlhs, mxArray* plhs[]) {
-  if (nlhs)
-    ERROR("Too many output: %d for 1.", nlhs);
-  sqlite3mex::Database* connection = manager()->get(id_);
-  if (!connection->busy_timeout(timeout_))
-    ERROR("Failed to set timeout.");
-}
+int Session::last_id_ = 0;
 
 } // namespace sqlite3mex

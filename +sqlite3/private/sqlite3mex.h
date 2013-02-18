@@ -1,6 +1,7 @@
 // Sqlite3 matlab driver library.
 //
 // Kota Yamaguchi 2012 <kyamagu@cs.stonybrook.edu>
+
 #ifndef __SQLITE3MEX_H__
 #define __SQLITE3MEX_H__
 
@@ -93,10 +94,8 @@ private:
 // the size exceeds the maximum limit.
 class StatementCache {
 public:
-  // Hash map to the prepared statement.
-  typedef boost::unordered_map<string, Statement> CacheMap;
   // Default cache size.
-  static const int DEFAULT_CACHE_SIZE = 10;
+  static const int DEFAULT_CACHE_SIZE = 16;
 
   // Create a default cache.
   StatementCache(size_t cache_size = DEFAULT_CACHE_SIZE);
@@ -109,7 +108,7 @@ private:
   // FIFO to maintain generation of the keys.
   deque<string> fifo_;
   // Lookup table.
-  CacheMap table_;
+  boost::unordered_map<string, Statement> table_;
   // Maximum cache size.
   size_t cache_size_;
 };
@@ -149,122 +148,28 @@ private:
 };
 
 // Database session manager. Container for Database objects.
-class DatabaseManager {
+class Session {
 public:
-  DatabaseManager();
-  ~DatabaseManager();
   // Create a new connection.
-  int open(const string& filename);
+  static int open(const string& filename);
   // Close the connection.
-  void close(int id);
+  static void close(int id);
   // Default id.
-  int default_id() const;
+  static int default_id();
   // Last id.
-  int last_id() const;
+  static int last_id();
   // Get the connection.
-  Database* get(int id);
+  static Database* get(int id);
 
 private:
+  // Constructor prohibited.
+  Session();
+  ~Session();
+
   // Connection pool.
-  map<int, Database> connections_;
+  static map<int, Database> connections_;
   // Last id used.
-  int last_id_;
-};
-
-// Abstract operation class. Child class must implement run() method.
-// The static method parse() is a factory method to create an instance.
-//
-//    auto_ptr<Operation> operation(Operation::parse(nrhs, prhs));
-//    operation->run(nlhs, plhs);
-//
-class Operation {
-public:
-  // Destructor.
-  virtual ~Operation() {}
-  // Factory method for operation. Takes rhs of the mexFunction and return
-  // a new operation object. Caller is responsible for the destruction after
-  // use.
-  static Operation* parse(int nrhs, const mxArray *prhs[]);
-  // Execute the operation.
-  virtual void run(int nlhs, mxArray* plhs[]) = 0;
-
-protected:
-  // Default constructor is prohibited. Use parse() method.
-  Operation() {}
-  // Internal parser.
-  virtual void parse_internal(const vector<const mxArray*>& args) = 0;
-  // Accessor for the manager.
-  static DatabaseManager* manager() { return &manager_; }
-
-private:
-  // Database session manager.
-  static DatabaseManager manager_;
-};
-
-// Open operation class.
-class OpenOperation : public Operation {
-public:
-  // Open a connection.
-  virtual void run(int nlhs, mxArray* plhs[]);
-
-protected:
-  // Parse input arguments.
-  void parse_internal(const vector<const mxArray*>& args);
-
-private:
-  // Name of the file.
-  string filename_;
-};
-
-// Close operation class.
-class CloseOperation : public Operation {
-public:
-  // Close the connection.
-  virtual void run(int nlhs, mxArray* plhs[]);
-
-protected:
-  // Parse input arguments.
-  void parse_internal(const vector<const mxArray*>& args);
-
-private:
-  // Session id.
-  int id_;
-};
-
-// Execution operation class.
-class ExecuteOperation : public Operation {
-public:
-  // Execute a statement.
-  virtual void run(int nlhs, mxArray* plhs[]);
-
-protected:
-  // Parse input arguments.
-  void parse_internal(const vector<const mxArray*>& args);
-
-private:
-  // Session id.
-  int id_;
-  // SQL statement.
-  string sql_;
-  // SQL parameters.
-  vector<const mxArray*> params_;
-};
-
-// Timeout operation class.
-class TimeoutOperation : public Operation {
-public:
-  // Set or get timeout.
-  virtual void run(int nlhs, mxArray* plhs[]);
-
-protected:
-  // Parse input arguments.
-  void parse_internal(const vector<const mxArray*>& args);
-
-private:
-  // Session id.
-  int id_;
-  // Timeout value.
-  int timeout_;
+  static int last_id_;
 };
 
 } // namespace sqlite3mex

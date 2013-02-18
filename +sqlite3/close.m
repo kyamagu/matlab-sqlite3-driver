@@ -9,6 +9,6 @@ function close( varargin )
 % closed.
 %
 % See also sqlite3.open sqlite3.execute
-    driver_('close', varargin{:});
+    mex_function_('close', varargin{:});
 end
 

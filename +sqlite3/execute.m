@@ -17,6 +17,6 @@ function results = execute(varargin)
 %     results = sqlite3.execute(db_id, 'SELECT * FROM records WHERE name = ?', 'foo')
 %
 % See also sqlite3.open sqlite3.close
-    results = driver_('execute', varargin{:});
+    results = mex_function_('execute', varargin{:});
 end
 

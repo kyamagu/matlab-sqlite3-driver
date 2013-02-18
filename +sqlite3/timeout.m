@@ -6,6 +6,6 @@ function timeout( varargin )
 %
 % The timeout operation sets how long the driver should wait when the
 % database is locked by other processes.
-    driver_('timeout', varargin{:});
+    mex_function_('timeout', varargin{:});
 end
 

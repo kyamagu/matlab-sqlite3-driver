@@ -8,6 +8,6 @@ function db_id = open( filename )
 % closed.
 %
 % See also sqlite3.close sqlite3.execute
-    db_id = driver_('open', filename);
+    db_id = mex_function_('open', filename);
 end
 
