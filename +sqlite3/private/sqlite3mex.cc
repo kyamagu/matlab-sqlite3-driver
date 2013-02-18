@@ -274,7 +274,7 @@ bool Database::convert_columns_to_array(vector<Column>* columns,
   if (array == NULL)
     return false;
   if (columns->empty()) {
-    *array = mxCreateDoubleMatrix(0, 0, mxREAL);
+    *array = mxCreateStructMatrix(0, 0, 0, NULL);
   }
   else {
     vector<const char*> fieldnames;
