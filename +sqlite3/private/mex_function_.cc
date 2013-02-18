@@ -55,16 +55,8 @@ MEX_FUNCTION(timeout) (int nlhs,
                        const mxArray* prhs[]) {
   CheckInputArguments(1, 2, nrhs);
   CheckOutputArguments(0, 0, nlhs);
-  int id = 0;
-  int timeout = 0;
-  if (nrhs == 1) {
-    id = Session::default_id();
-    timeout = MxArray(prhs[0]).toInt();
-  }
-  else {
-    id = Session::default_id();
-    timeout = MxArray(prhs[0]).toInt();
-  }
+  int id = (nrhs == 1) ? Session::default_id() : MxArray(prhs[0]).toInt();
+  int timeout = MxArray(prhs[nrhs == 2]).toInt();
   Database* connection = Session::get(id);
   if (!connection->busy_timeout(timeout))
     ERROR("Failed to set timeout.");
