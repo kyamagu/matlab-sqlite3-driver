@@ -57,9 +57,7 @@ bool Statement::bind(const vector<const mxArray*>& params) {
     false;
   for (int i = 0; i < params.size(); ++i) {
     if (mxGetNumberOfElements(params[i]) == 1 && mxIsNumeric(params[i])) {
-      if (mxIsEmpty(params[i]))
-        code_ = sqlite3_bind_null(statement_, i + 1);
-      else if (mxIsDouble(params[i]) || mxIsSingle(params[i]))
+      if (mxIsDouble(params[i]) || mxIsSingle(params[i]))
         code_ = sqlite3_bind_double(statement_, i + 1, mxGetScalar(params[i]));
       else
         code_ = sqlite3_bind_int64(statement_, i + 1, mxGetScalar(params[i]));
