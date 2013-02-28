@@ -2,6 +2,7 @@
 //
 // Kota Yamaguchi 2012 <kyamagu@cs.stonybrook.edu>
 
+#include <limits>
 #include "mex/function.h"
 #include "mex/mxarray.h"
 #include "sqlite3mex.h"
@@ -36,7 +37,7 @@ MEX_FUNCTION(execute) (int nlhs,
                        mxArray* plhs[],
                        int nrhs,
                        const mxArray* prhs[]) {
-  CheckInputArguments(1, 1024, nrhs);
+  CheckInputArguments(1, numeric_limits<int>::max(), nrhs);
   CheckOutputArguments(0, 1, nlhs);
   vector<const mxArray*> rhs(prhs, prhs + nrhs);
   vector<const mxArray*>::iterator it = rhs.begin();
