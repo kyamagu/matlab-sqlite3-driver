@@ -5,12 +5,12 @@
 ///
 /// Conversion from mxArray* to C++ types.
 ///
-///     int value            = MxArray(prhs[0]).toInt();
-///     double value         = MxArray(prhs[0]).toDouble();
-///     bool value           = MxArray(prhs[0]).toBool();
-///     std::string value    = MxArray(prhs[0]).toString();
-///     std::vector<double>  = MxArray(prhs[0]).toVector<double>();
-///     std::vector<MxArray> = MxArray(prhs[0]).toVector<MxArray>();
+///     int value                  = MxArray(prhs[0]).toInt();
+///     double value               = MxArray(prhs[0]).toDouble();
+///     bool value                 = MxArray(prhs[0]).toBool();
+///     std::string value          = MxArray(prhs[0]).toString();
+///     std::vector<double> value  = MxArray(prhs[0]).toVector<double>();
+///     std::vector<MxArray> value = MxArray(prhs[0]).toVector<MxArray>();
 ///
 /// Conversion from C++ types to mxArray*.
 ///
