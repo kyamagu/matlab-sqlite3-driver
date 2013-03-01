@@ -156,8 +156,6 @@ public:
   static void close(int id);
   // Default id.
   static int default_id();
-  // Last id.
-  static int last_id();
   // Get the connection.
   static Database* get(int id);
 
@@ -168,8 +166,6 @@ private:
 
   // Connection pool.
   static map<int, Database> connections_;
-  // Last id used.
-  static int last_id_;
 };
 
 } // namespace sqlite3mex
