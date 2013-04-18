@@ -147,27 +147,6 @@ private:
   sqlite3* database_;
 };
 
-// Database session manager. Container for Database objects.
-class Session {
-public:
-  // Create a new connection.
-  static int open(const string& filename);
-  // Close the connection.
-  static void close(int id);
-  // Default id.
-  static int default_id();
-  // Get the connection.
-  static Database* get(int id);
-
-private:
-  // Constructor prohibited.
-  Session();
-  ~Session();
-
-  // Connection pool.
-  static map<int, Database> connections_;
-};
-
 } // namespace sqlite3mex
 
 #endif // __SQLITE3MEX_H__

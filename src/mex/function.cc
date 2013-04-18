@@ -32,36 +32,6 @@ OperationCreator::OperationCreator(const std::string& name) {
 
 OperationCreator::~OperationCreator() {}
 
-void CheckInputArguments(int min_args, int max_args, int nrhs) {
-  if (nrhs < min_args)
-    mexErrMsgIdAndTxt("mex:error",
-                      "Missing input arguments: %d for %d to %d.",
-                      nrhs,
-                      min_args,
-                      max_args);
-  if (nrhs > max_args)
-    mexErrMsgIdAndTxt("mex:error",
-                      "Too many input arguments: %d for %d to %d.",
-                      nrhs,
-                      min_args,
-                      max_args);
-}
-
-void CheckOutputArguments(int min_args, int max_args, int nlhs) {
-  if (nlhs < min_args)
-    mexErrMsgIdAndTxt("mex:error",
-                      "Missing output arguments: %d for %d to %d.",
-                      nlhs,
-                      min_args,
-                      max_args);
-  if (nlhs > max_args)
-    mexErrMsgIdAndTxt("mex:error",
-                      "Too many output arguments: %d for %d to %d.",
-                      nlhs,
-                      min_args,
-                      max_args);
-}
-
 } // namespace mex
 
 /// Main entry of the mex function.

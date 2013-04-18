@@ -334,30 +334,4 @@ mxArray* Database::convert_value_to_array(const Value& value) {
   return array;
 }
 
-int Session::open(const string& filename) {
-  int last_id = default_id();
-  if (!connections_[++last_id].open(filename)) {
-    connections_.erase(last_id);
-    ERROR("Unable to open: %s.", filename.c_str());
-  }
-  return last_id;
-}
-
-void Session::close(int id) {
-  connections_.erase(id);
-}
-
-int Session::default_id() {
-  return (connections_.empty()) ? 0 : connections_.rbegin()->first;
-}
-
-Database* Session::get(int id) {
-  map<int, Database>::iterator connection = connections_.find(id);
-  if (connection == connections_.end())
-    ERROR("Invalid id: %d. Did you open?", id);
-  return &connection->second;
-}
-
-map<int, Database> Session::connections_;
-
 } // namespace sqlite3mex

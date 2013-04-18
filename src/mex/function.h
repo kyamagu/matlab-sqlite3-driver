@@ -90,12 +90,6 @@ private:
   static std::map<std::string, OperationCreator*>* registry();
 };
 
-/// Check number of input arguments.
-void CheckInputArguments(int min_args, int max_args, int nlhs);
-
-/// Check number of output arguments.
-void CheckOutputArguments(int min_args, int max_args, int nlhs);
-
 } // namespace mex
 
 /// Define a MEX API function. Example:

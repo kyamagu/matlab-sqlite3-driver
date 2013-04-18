@@ -102,7 +102,8 @@ MxArray MxArray::clone() {
 }
 
 void MxArray::destroy() {
-  mxDestroyArray(mutable_array_);
+  if (mutable_array_ != NULL)
+    mxDestroyArray(mutable_array_);
   reset(static_cast<mxArray*>(NULL));
 }
 

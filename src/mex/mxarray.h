@@ -5,12 +5,12 @@
 ///
 /// Conversion from mxArray* to C++ types.
 ///
-///     int value                  = MxArray(prhs[0]).toInt();
-///     double value               = MxArray(prhs[0]).toDouble();
-///     bool value                 = MxArray(prhs[0]).toBool();
-///     std::string value          = MxArray(prhs[0]).toString();
-///     std::vector<double> value  = MxArray(prhs[0]).toVector<double>();
-///     std::vector<MxArray> value = MxArray(prhs[0]).toVector<MxArray>();
+///     int value            = MxArray(prhs[0]).toInt();
+///     double value         = MxArray(prhs[0]).toDouble();
+///     bool value           = MxArray(prhs[0]).toBool();
+///     std::string value    = MxArray(prhs[0]).toString();
+///     std::vector<double>  = MxArray(prhs[0]).toVector<double>();
+///     std::vector<MxArray> = MxArray(prhs[0]).toVector<MxArray>();
 ///
 /// Conversion from C++ types to mxArray*.
 ///
@@ -96,7 +96,8 @@ public:
                         const char** fields = NULL,
                         int rows = 1,
                         int columns = 1);
-  /// Destructor. This does not free the underlying mxArray*.
+  /// Destructor. Note that the current implementation does not free the
+  /// underlying mxArray*.
   virtual ~MxArray();
   /// Reset an mxArray to a const mxArray*.
   void reset(const mxArray* array);
@@ -537,7 +538,7 @@ void MxArray::set(const std::string& field_name,
                         field_name.c_str());
   }
   mxSetField(mutable_array_, index, field_name.c_str(),
-             static_cast<mxArray*>(MxArray(value)));
+             MxArray(value).getMutable());
 }
 
 /// Convert std::vector<char> to a char array.
