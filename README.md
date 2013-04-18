@@ -9,6 +9,16 @@ Matlab driver for SQLite3 database. Features include:
  * Multiple database connections.
  * Easy manipulation of query results as a struct array.
 
+Here is a quick example.
+
+    sqlite3.open('/path/to/database.sqlite3');
+    sqlite3.execute('CREATE TABLE records (id INTEGER, name VARCHAR)');
+    sqlite3.execute('INSERT INTO records VALUES (?, ?)', 1, 'foo');
+    sqlite3.execute('INSERT INTO records VALUES (?, ?)', 2, 'bar');
+    records = sqlite3.execute('SELECT * FROM records WHERE id < ?', 10);
+    result = sqlite3.execute('SELECT COUNT(*) FROM records');
+    sqlite3.close();
+
 Prerequisites
 -------------
 
