@@ -63,13 +63,12 @@ bool Statement::bind(const vector<const mxArray*>& params) {
         code_ = sqlite3_bind_int64(statement_, i + 1, mxGetScalar(params[i]));
     }
     else if (mxIsChar(params[i])) {
-      char* str = mxArrayToString(params[i]);
+      const char* text = reinterpret_cast<const char*>(mxGetChars(params[i]));
       code_ = sqlite3_bind_text(statement_,
                                 i + 1,
-                                str,
-                                -1,
-                                SQLITE_TRANSIENT);
-      mxFree(str);
+                                text,
+                                mxGetNumberOfElements(params[i]),
+                                SQLITE_STATIC);
     }
     else if (mxIsUint8(params[i])) {
       code_ = sqlite3_bind_blob(statement_,
@@ -314,7 +313,12 @@ mxArray* Database::convert_value_to_array(const Value& value) {
       break;
     }
     case SQLITE_TEXT: {
-      array = mxCreateString(boost::get<TextValue>(value.second).c_str());
+      // mxCreateString is simpler but slow for a long string.
+      //array = mxCreateString(boost::get<TextValue>(value.second).c_str());
+      const TextValue& text = boost::get<TextValue>(value.second);
+      mwSize dimensions[] = {1, text.size()};
+      array = mxCreateCharArray(2, dimensions);
+      copy(text.begin(), text.end(), mxGetChars(array));
       break;
     }
     case SQLITE_BLOB: {
