@@ -63,12 +63,13 @@ bool Statement::bind(const vector<const mxArray*>& params) {
         code_ = sqlite3_bind_int64(statement_, i + 1, mxGetScalar(params[i]));
     }
     else if (mxIsChar(params[i])) {
-      const char* text = reinterpret_cast<const char*>(mxGetChars(params[i]));
+      char* text = mxArrayToString(params[i]);
       code_ = sqlite3_bind_text(statement_,
                                 i + 1,
                                 text,
-                                mxGetNumberOfElements(params[i]),
-                                SQLITE_STATIC);
+                                -1,
+                                SQLITE_TRANSIENT);
+      mxFree(text);
     }
     else if (mxIsUint8(params[i])) {
       code_ = sqlite3_bind_blob(statement_,

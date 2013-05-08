@@ -1,7 +1,7 @@
 function test_sqlite3
 %TEST_SQLITE3 Test the functionality of the sqlite3 driver.
 
-  tests = {@test_functional_1, @test_functional_2};
+  tests = {@test_functional_1, @test_functional_2, @test_functional_3};
   for i = 1:numel(tests)
     try
       tests{i}();
@@ -60,4 +60,15 @@ function test_functional_2
   end
   cleanup(db_id, filename);
 
+end
+
+function test_functional_3
+%TEST_FUNCTIONAL_3
+  filename = ':memory:';
+  sqlite3.open(filename);
+  sqlite3.execute('CREATE TABLE records(id INTEGER, value VARCHAR(64))');
+  sqlite3.execute('INSERT INTO records(id, value) VALUES (?,?)', 1, 'foo');
+  record = sqlite3.execute('SELECT * FROM records');
+  assert(record.id == 1);
+  assert(strcmp(record.value, 'foo'));
 end
