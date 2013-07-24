@@ -31,7 +31,7 @@ installed in the system.
  * Boost C++ Library
  * SQLite3
 
-In UNIX, these dependencies are usually available in the package manager. For
+In UNIX, these dependencies are usually available in a package manager. For
 example, in Debian/Ubuntu, install packages by:
 
     $ apt-get install build-essential libsqlite3-dev libboost-dev
@@ -44,11 +44,11 @@ Build
 -----
 
 Call `sqlite3.make` in matlab. This will compile the package with default
-dependency to the installed libraries. If you need to specify where the
+dependency to installed libraries. If you need to specify where the
 dependent libraries are installed, use add compiler flags to the `sqlite3.make`
 script. Check the help of `sqlite3.make` for detail.
 
-Example: Compile with the default library.
+Example: Compile with default libraries.
 
     >> sqlite3.make;
 
@@ -71,7 +71,7 @@ __open__
 
     db_id = sqlite3.open(filename)
 
-The open operation takes a file name of the database and returns newly created
+The open operation takes a file name of a database and returns newly created
 connection id. This id can be used for operations until closed.
 
 Example:
@@ -83,7 +83,7 @@ __close__
     sqlite3.close(db_id)
     sqlite3.close()
 
-The close operation closes the connection to the database specified by the
+The close operation closes connection to the database specified by the
 connection id `db_id`. When `db_id` is omitted, the last opened connection is
 closed.
 
@@ -92,12 +92,12 @@ __execute__
     results = sqlite3.execute(db_id, sql, param1, param2, ...)
     results = sqlite3.execute(sql, param1, param2, ...)
 
-The execute operation applies a sql statement `sql` in the database specified
+The execute operation applies a sql statement `sql` in a database specified
 by the connection id `db_id`. When `db_id` is omitted, the last opened
 connection is used.
 
 The sql statement can bind parameters through `?` as a placeholder.
-When binding is used, there must be the corresponding number of parameters
+When binding is used, there must be corresponding number of parameters
 following the sql statement. Bind values can be a numeric scalar value,
 a string, a uint8 array for blob, or an empty array for null.
 
