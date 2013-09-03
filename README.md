@@ -56,6 +56,33 @@ Example: Use libraries installed at `/opt/local`.
 
     >> sqlite3.make('-I/opt/local/include', '-L/opt/local/lib');
 
+Runtime requirement
+-------------------
+
+In most cases, you'll need to force Matlab to preload the system library due
+to the incompatibility between Matlab's internal runtime. Use `LD_PRELOAD`
+variable to do so. For example, in Ubuntu 12.04 LTS 64-bit,
+
+    LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6:/lib/x86_64-linux-gnu/libgcc_s.so.1 matlab
+
+The required path depends on the OS. You can check which path to specify by
+comparing the output of `ldd` tool in the UNIX shell and in Matlab.
+
+From the UNIX shell,
+
+    $ ldd +sqlite3/private/mex_function_.mex*
+
+From Matlab shell,
+
+    >> !ldd +sqlite3/private/mex_function_.mex*
+
+And find a dependent library differing in Matlab. You must append that library
+in the `LD_PRELOAD` path.
+
+In OS X, `LD_PRELOAD` equivalent is `DYLD_INSERT_LIBRARIES`. Use `otool -L`
+command instead of `ldd`.
+
+
 API
 ---
 
