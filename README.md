@@ -72,11 +72,11 @@ comparing the output of `ldd` tool in the UNIX shell and in Matlab.
 
 From the UNIX shell,
 
-    $ ldd +sqlite3/private/mex_function_.mex*
+    $ ldd +sqlite3/private/libsqlite3_.mex*
 
 From Matlab shell,
 
-    >> !ldd +sqlite3/private/mex_function_.mex*
+    >> !ldd +sqlite3/private/libsqlite3_.mex*
 
 And find a dependent library differing in Matlab. You must append that library
 in the `LD_PRELOAD` path.
@@ -98,31 +98,31 @@ namespace. Also check `help` of each function.
 
 __open__
 
-    db_id = sqlite3.open(filename)
+    database = sqlite3.open(filename)
 
 The open operation takes a file name of a database and returns newly created
 connection id. This id can be used for operations until closed.
 
 Example:
 
-    >> db_id = sqlite3.open('/path/to/test.db');
+    >> database = sqlite3.open('/path/to/test.db');
 
 __close__
 
-    sqlite3.close(db_id)
+    sqlite3.close(database)
     sqlite3.close()
 
 The close operation closes connection to the database specified by the
-connection id `db_id`. When `db_id` is omitted, the last opened connection is
-closed.
+connection id `database`. When `database` is omitted, the last opened
+connection is closed.
 
 __execute__
 
-    results = sqlite3.execute(db_id, sql, param1, param2, ...)
+    results = sqlite3.execute(database, sql, param1, param2, ...)
     results = sqlite3.execute(sql, param1, param2, ...)
 
 The execute operation applies a sql statement `sql` in a database specified
-by the connection id `db_id`. When `db_id` is omitted, the last opened
+by the connection id `database`. When `database` is omitted, the last opened
 connection is used.
 
 The sql statement can bind parameters through `?` as a placeholder.
@@ -134,12 +134,13 @@ Results are returned as a struct array.
 
 Example:
 
-    >> results = sqlite3.execute(db_id, 'SELECT * FROM records');
+    >> results = sqlite3.execute(database, 'SELECT * FROM records');
     >> results = sqlite3.execute('SELECT * FROM records');
     >> results = sqlite3.execute('SELECT * FROM records WHERE rowid = ? OR name = ?', 1, 'foo');
     >> results = sqlite3.execute('INSERT INTO records VALUES (?)', 'bar');
 
-Metadata can be retrieved from `sqlite_master` table or from `PRAGMA` statement.
+Metadata can be retrieved from `sqlite_master` table or from `PRAGMA`
+statement.
 
     >> tables = sqlite3.execute('SELECT * FROM sqlite_master WHERE type="table"');
     >> indices = sqlite3.execute('SELECT * FROM sqlite_master WHERE type="index"');
@@ -147,7 +148,7 @@ Metadata can be retrieved from `sqlite_master` table or from `PRAGMA` statement.
 
 __timeout__
 
-    sqlite3.timeout(db_id, millisecond)
+    sqlite3.timeout(database, millisecond)
     sqlite3.timeout(millisecond)
 
 The timeout operation sets how long the driver should wait when the database
