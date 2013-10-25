@@ -1,8 +1,8 @@
 function results = execute(varargin)
 %EXECUTE Execute an SQL statement.
 %
-%     results = sqlite3.driver(sql, param1, param2, ...)
-%     results = sqlite3.driver(db_id, sql, param1, param2, ...)
+%     results = sqlite3.execute(sql, param1, param2, ...)
+%     results = sqlite3.execute(database, sql, param1, param2, ...)
 %
 % The execute operation applies sql statement `sql` in the database specified
 % by the connection id `db_id`. When `db_id` is omitted, the default connection
@@ -17,6 +17,6 @@ function results = execute(varargin)
 %     results = sqlite3.execute(db_id, 'SELECT * FROM records WHERE name = ?', 'foo')
 %
 % See also sqlite3.open sqlite3.close
-    results = mex_function_('execute', varargin{:});
+    results = libsqlite3_('execute', varargin{:});
 end
 

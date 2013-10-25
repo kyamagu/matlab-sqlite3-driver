@@ -29,32 +29,34 @@ installed in the system.
 
  * C++ compiler for mex
  * Boost C++ Library
- * SQLite3
 
 In UNIX, these dependencies are usually available in a package manager. For
 example, in Debian/Ubuntu, install packages by:
 
-    $ apt-get install build-essential libsqlite3-dev libboost-dev
+    $ apt-get install build-essential libboost-dev
 
 In macports, install packages by:
 
-    $ port install sqlite3 boost
+    $ port install boost
+
+After installing these dependency, make sure to set up the `mex` command in
+Matlab.
+
+    >> mex -setup
 
 Build
 -----
 
-Call `sqlite3.make` in matlab. This will compile the package with default
-dependency to installed libraries. If you need to specify where the
-dependent libraries are installed, use add compiler flags to the `sqlite3.make`
-script. Check the help of `sqlite3.make` for detail.
+Call `sqlite3.make` in matlab. Pass any additional compiler flags to this
+function.
 
-Example: Compile with default libraries.
+Example: Default build.
 
     >> sqlite3.make;
 
-Example: Use libraries installed at `/opt/local`.
+Example: Use boost headers installed at `/opt/local/include`.
 
-    >> sqlite3.make('-I/opt/local/include', '-L/opt/local/lib');
+    >> sqlite3.make('-I/opt/local/include');
 
 Runtime requirement
 -------------------
