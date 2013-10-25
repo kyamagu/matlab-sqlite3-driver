@@ -25,6 +25,9 @@ end
 function compiler_flags = parse_options(varargin)
 % Parse compiler options.
     compiler_flags = sprintf(' %s', varargin{:});
+    if isunix()
+        compiler_flags = [compiler_flags, ' -ldl'];
+    end
 end
 
 function files = find_source_files(root_dir)
