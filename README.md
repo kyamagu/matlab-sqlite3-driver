@@ -24,16 +24,16 @@ Prerequisites
 
 This driver is built on the Matlab `mex` interface. The package requires a C++
 compiler for `mex`. In Windows, a C++ compiler is available from Visual Studio
-and Microsoft SDK. See
+and Microsoft SDK. Check
 [Mathworks webpage](http://www.mathworks.com/support/compilers) for a supported
-compilers.
+compiler.
 
-In Linux, a compiler are usually available in a package manager. For example,
+In Linux, a compiler is usually available in a package manager. For example,
 in Debian/Ubuntu:
 
     $ apt-get install build-essential
 
-In Mac OS, install XCode and also the command line tools. See
+In Mac OS, install XCode and also UNIX command line tools. Also check
 [this page](http://www.mathworks.com/support/solutions/en/data/1-FR6LXJ/)
 to apply patches if necessary.
 
