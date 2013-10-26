@@ -22,15 +22,9 @@ Here is a quick example.
 Prerequisites
 -------------
 
-This driver is designed for matlab under UNIX environment.
-
-This driver depends on the following software packages. Make sure these are
-installed in the system.
-
- * C++ compiler for mex
-
-In UNIX, these dependencies are usually available in a package manager. For
-example, in Debian/Ubuntu, install packages by:
+This driver is designed for matlab under UNIX environment. The package requires
+a C++ compiler for `mex`. In UNIX, a compiler are usually available in a
+package manager. For example, in Debian/Ubuntu:
 
     $ apt-get install build-essential
 
@@ -75,7 +69,6 @@ in the `LD_PRELOAD` path.
 
 In OS X, `LD_PRELOAD` equivalent is `DYLD_INSERT_LIBRARIES`. Use `otool -L`
 command instead of `ldd`.
-
 
 API
 ---
