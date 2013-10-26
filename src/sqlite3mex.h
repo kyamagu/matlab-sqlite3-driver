@@ -5,8 +5,8 @@
 #ifndef __SQLITE3MEX_H__
 #define __SQLITE3MEX_H__
 
-#include <boost/unordered_map.hpp>
-#include <boost/variant.hpp>
+#include "boost/unordered_map.hpp"
+#include "boost/variant.hpp"
 #include <deque>
 #include <map>
 #include <mex.h>

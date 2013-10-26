@@ -28,41 +28,33 @@ This driver depends on the following software packages. Make sure these are
 installed in the system.
 
  * C++ compiler for mex
- * Boost C++ Library
 
 In UNIX, these dependencies are usually available in a package manager. For
 example, in Debian/Ubuntu, install packages by:
 
-    $ apt-get install build-essential libboost-dev
+    $ apt-get install build-essential
 
-In macports, install packages by:
+In Mac OS, install XCode and also the command line tools. See
+[this page](http://www.mathworks.com/support/solutions/en/data/1-FR6LXJ/)
+to apply patches if necessary.
 
-    $ port install boost
-
-After installing these dependency, make sure to set up the `mex` command in
-Matlab.
+After installing build tools, set up the `mex` command in Matlab.
 
     >> mex -setup
 
 Build
 -----
 
-Call `sqlite3.make` in matlab. Pass any additional compiler flags to this
-function.
-
-Example: Default build.
+Add path to the `matlab-sqlite3-driver` first. Then, call `sqlite3.make` in
+Matlab.
 
     >> sqlite3.make;
-
-Example: Use boost headers installed at `/opt/local/include`.
-
-    >> sqlite3.make('-I/opt/local/include');
 
 Runtime requirement
 -------------------
 
 In most cases, you'll need to force Matlab to preload the system library due
-to the incompatibility between Matlab's internal runtime. Use `LD_PRELOAD`
+to the incompatibility between Matlab's internal C++ runtime. Use `LD_PRELOAD`
 variable to do so. For example, in Ubuntu 12.04 LTS 64-bit,
 
     LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libstdc++.so.6:/lib/x86_64-linux-gnu/libgcc_s.so.1 matlab
