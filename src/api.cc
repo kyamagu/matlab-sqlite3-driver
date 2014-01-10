@@ -15,7 +15,7 @@ using mex::MxArray;
 using mex::Session;
 using sqlite3mex::Database;
 
-template class Session<Database>;
+template class mex::Session<Database>;
 
 namespace {
 
