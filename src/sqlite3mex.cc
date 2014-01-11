@@ -54,7 +54,7 @@ bool Statement::bind(const vector<const mxArray*>& params) {
     ERROR("Wrong number of parameters: %d for %d.", params.size(), num_binds);
   code_ = sqlite3_clear_bindings(statement_);
   if (!ok())
-    false;
+    return false;
   for (int i = 0; i < params.size(); ++i) {
     if (mxGetNumberOfElements(params[i]) == 1 && mxIsNumeric(params[i])) {
       if (mxIsDouble(params[i]) || mxIsSingle(params[i]))

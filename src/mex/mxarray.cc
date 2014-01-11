@@ -166,7 +166,7 @@ void MxArray::fieldNames(std::vector<std::string>* field_names) const {
 }
 
 mwIndex MxArray::subs(mwIndex row, mwIndex column) const {
-  if (row < 0 || row >= rows() || column < 0 || column >= cols())
+  if (row >= rows() || column >= cols())
     mexErrMsgIdAndTxt("mxarray:error", "Subscript is out of range.");
   mwIndex subscripts[] = {row, column};
   return mxCalcSingleSubscript(array_, 2, subscripts);
@@ -181,7 +181,7 @@ MxArray MxArray::at(const std::string& field_name, mwIndex index) const {
     mexErrMsgIdAndTxt("mxarray:error",
                       "MxArray is not a struct array but %s.",
                       className().c_str());
-  if (index < 0 || numel() <= index)
+  if (numel() <= index)
     mexErrMsgIdAndTxt("mxarray:error", "Index is out of range.");
   mxArray* array = mxGetField(array_, index, field_name.c_str());
   if (array == NULL)
@@ -201,7 +201,7 @@ void MxArray::set(mwIndex index, mxArray* value) {
     mexErrMsgIdAndTxt("mxarray:error",
                       "MxArray is not a cell array but %s.",
                       className().c_str());
-  if (index < 0 || numel() <= index)
+  if (numel() <= index)
     mexErrMsgIdAndTxt("mxarray:error", "Index is out of range.");
   mxSetCell(mutable_array_, index, value);
 }
