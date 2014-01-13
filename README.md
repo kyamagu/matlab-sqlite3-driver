@@ -11,6 +11,7 @@ Matlab driver for SQLite3 database. Features include:
 
 Here is a quick example.
 
+    addpath('/path/to/matlab-sqlite3-driver');
     sqlite3.open('/path/to/database.sqlite3');
     sqlite3.execute('CREATE TABLE records (id INTEGER, name VARCHAR)');
     sqlite3.execute('INSERT INTO records VALUES (?, ?)', 1, 'foo');
@@ -47,10 +48,14 @@ Build
 Add path to the `matlab-sqlite3-driver` first. Then, call `sqlite3.make` in
 Matlab.
 
-    >> sqlite3.make;
+    >> sqlite3.make
 
 Runtime requirement
 -------------------
+
+Always add path to this driver before use within Matlab.
+
+    >> addpath /path/to/matlab-sqlite3-driver
 
 In most cases, you'll need to force Matlab to preload the system library due
 to the incompatibility between Matlab's internal C++ runtime. Use `LD_PRELOAD`
@@ -80,8 +85,8 @@ Test
 
 Optionally test the functionality with the attached test script.
 
-    >> addpath test/;
-    >> test_sqlite3;
+    >> addpath test/
+    >> test_sqlite3
 
 API
 ---
@@ -155,6 +160,24 @@ is locked by other processes.
 Example:
 
     >> sqlite3.timeout(1000);
+
+Tips
+----
+
+### Mass insertion
+
+Use transaction to insert a lot of data.
+
+    sqlite3.execute('BEGIN');
+    for i = 1:numel(X)
+        sqlite3.execute('INSERT INTO records (x) values (?)', X(i));
+    end
+    sqlite3.execute('COMMIT');
+
+Or, convert an array to a statement string.
+
+    values = sprintf('(%g),', X);
+    sqlite3.execute(['INSERT INTO records (x) values ', values(1:end-1)]);
 
 License
 -------
