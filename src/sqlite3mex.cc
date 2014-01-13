@@ -1,12 +1,12 @@
-// Sqlite3 matlab driver library.
+// SQLite3 matlab driver library.
 //
 // Kota Yamaguchi 2012 <kyamagu@cs.stonybrook.edu>
 
 #include "boost/algorithm/string.hpp"
 #include "boost/xpressive/xpressive.hpp"
 #include <set>
-#include <sstream>
 #include "sqlite3mex.h"
+#include <sstream>
 
 using boost::xpressive::sregex;
 
@@ -78,11 +78,10 @@ bool Statement::bind(const vector<const mxArray*>& params) {
                                 mxGetNumberOfElements(params[i]),
                                 SQLITE_STATIC);
     }
-    else if (mxIsEmpty(params[i])) {
+    else if (mxIsEmpty(params[i]))
       code_ = sqlite3_bind_null(statement_, i + 1);
-    }
     else
-      return false;
+      ERROR("Can't bind parameter %d.", i + 1);
     if (!ok())
       return false;
   }

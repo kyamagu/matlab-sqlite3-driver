@@ -1,4 +1,4 @@
-// Sqlite3 matlab driver main.
+// SQLite3 matlab driver main.
 //
 // Kota Yamaguchi 2012 <kyamagu@cs.stonybrook.edu>
 

@@ -1,4 +1,4 @@
-// Sqlite3 matlab driver library.
+// SQLite3 matlab driver library.
 //
 // Kota Yamaguchi 2012 <kyamagu@cs.stonybrook.edu>
 
@@ -10,7 +10,7 @@
 #include <deque>
 #include <map>
 #include <mex.h>
-#include <sqlite3.h>
+#include "sqlite3.h"
 #include <stdint.h>
 #include <string>
 #include <vector>
