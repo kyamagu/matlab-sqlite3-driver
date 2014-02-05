@@ -103,6 +103,8 @@ public:
   ~StatementCache();
   // Get the cached statement.
   Statement* get(const string& statement, sqlite3* database);
+  // Clear the cache.
+  void clear();
 
 private:
   // FIFO to maintain generation of the keys.

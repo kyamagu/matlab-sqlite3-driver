@@ -188,6 +188,11 @@ Statement* StatementCache::get(const string& statement, sqlite3* database) {
   return &entry->second;
 }
 
+void StatementCache::clear() {
+  table_.clear();
+  fifo_.clear();
+}
+
 Database::Database() : database_(NULL) {}
 
 Database::~Database() {
@@ -200,6 +205,7 @@ bool Database::open(const string& filename) {
 
 void Database::close() {
   if (database_) {
+    statement_cache_.clear();
     sqlite3_close(database_);
     database_ = NULL;
   }
