@@ -29,9 +29,9 @@ MEX_FUNCTION(open) (int nlhs,
   Database* database = NULL;
   int database_id = Session<Database>::create(&database);
   if (!database->open(filename)) {
-    const char* error_message = database->error_message();
+    const char* errorMessage = database->errorMessage();
     Session<Database>::destroy(database_id);
-    ERROR(error_message);
+    ERROR(errorMessage);
   }
   plhs[0] = MxArray(database_id).getMutable();
 }
@@ -62,7 +62,7 @@ MEX_FUNCTION(execute) (int nlhs,
   if (!database)
     ERROR("No open database found.");
   if (!database->execute(sql, params, &plhs[0]))
-    ERROR("%s: %s", database->error_message(), sql.c_str());
+    ERROR("%s: %s", database->errorMessage(), sql.c_str());
 }
 
 MEX_FUNCTION(timeout) (int nlhs,
@@ -76,7 +76,7 @@ MEX_FUNCTION(timeout) (int nlhs,
   Database* database = Session<Database>::get(id);
   if (!database)
     ERROR("No open database found.");
-  if (!database->busy_timeout(timeout))
+  if (!database->busyTimeout(timeout))
     ERROR("Failed to set timeout.");
 }
 

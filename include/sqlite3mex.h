@@ -69,15 +69,15 @@ public:
   // Return sqlite3_stmt* object.
   sqlite3_stmt* get();
   // Column count. The statement must be in ROW code. i.e., row() == true.
-  int column_count() const;
+  int columnCount() const;
   // Data count. The statement must be in ROW code. i.e., row() == true.
-  int data_count() const;
+  int dataCount() const;
   // Column name. The statement must be in ROW code. i.e., row() == true.
-  const char* column_name(int i) const;
+  const char* columnName(int i) const;
   // Column type. The statement must be in ROW code. i.e., row() == true.
-  int column_type(int i) const;
+  int columnType(int i) const;
   // Column value. The statement must be in ROW code. i.e., row() == true.
-  const Value& column_value(int i);
+  const Value& columnValue(int i);
 
 private:
   // Prepared statement.
@@ -118,30 +118,34 @@ private:
 // Database connection.
 class Database {
 public:
+  // Create a new database connection.
   Database();
+  // Destroy the connection.
   ~Database();
   // Open a connection.
   bool open(const string& filename);
   // Return the last error code.
-  int error_code();
+  int errorCode() const;
   // Return the last error message.
-  const char* error_message();
+  const char* errorMessage() const;
   // Execute SQL statement.
   bool execute(const string& statement,
                const vector<const mxArray*>& params,
                mxArray** result);
   // Set timeout when busy.
-  bool busy_timeout(int milliseconds);
+  bool busyTimeout(int milliseconds);
 
 private:
   // Close the connection.
   void close();
   // Make columns and fill in matlab-safe column names.
-  void create_columns(const Statement& stmt, vector<Column>* columns);
+  void createColumns(const Statement& statement,
+                      vector<Column>* columns) const;
   // Convert vector<Column> to mxArray*.
-  bool convert_columns_to_array(vector<Column>* columns, mxArray** array);
+  bool convertColumnsToArray(vector<Column>* columns,
+                                mxArray** array) const;
   // Convert Value object to mxArray*.
-  mxArray* convert_value_to_array(const Value& value);
+  mxArray* convertValueToArray(const Value& value) const;
 
   // Statement cache.
   StatementCache statement_cache_;

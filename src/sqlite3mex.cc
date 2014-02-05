@@ -108,28 +108,28 @@ sqlite3_stmt* Statement::get() {
   return statement_;
 }
 
-int Statement::column_count() const {
+int Statement::columnCount() const {
   return sqlite3_column_count(statement_);
 }
 
-int Statement::data_count() const {
+int Statement::dataCount() const {
   return sqlite3_data_count(statement_);
 }
 
-const char* Statement::column_name(int i) const {
+const char* Statement::columnName(int i) const {
   return sqlite3_column_name(statement_, i);
 }
 
-int Statement::column_type(int i) const {
+int Statement::columnType(int i) const {
   return sqlite3_column_type(statement_, i);
 }
 
-const Value& Statement::column_value(int i) {
+const Value& Statement::columnValue(int i) {
   // It is possible to directly create an mxArray* here. However, due to the
   // memory allocation pattern in Matlab, it is faster to keep the result into
   // a temporary storage and convert the values to mxArray* after we find
   // the number of rows.
-  switch (column_type(i)) {
+  switch (columnType(i)) {
     case SQLITE_INTEGER: {
       value_.first = SQLITE_INTEGER;
       value_.second = static_cast<IntegerValue>(
@@ -211,11 +211,11 @@ void Database::close() {
   }
 }
 
-int Database::error_code() {
+int Database::errorCode() const {
   return sqlite3_errcode(database_);
 }
 
-const char* Database::error_message() {
+const char* Database::errorMessage() const {
   return sqlite3_errmsg(database_);
 }
 
@@ -231,29 +231,29 @@ bool Database::execute(const string& statement_string,
   bool first_row = true;
   while (statement->step()) {
     if (first_row) {
-      create_columns(*statement, &columns);
+      createColumns(*statement, &columns);
       first_row = false;
     }
-    for (int i = 0; i < statement->column_count(); ++i)
-      columns[i].values.push_back(statement->column_value(i));
+    for (int i = 0; i < statement->columnCount(); ++i)
+      columns[i].values.push_back(statement->columnValue(i));
   }
   // TODO: check if the columns are valid.
-  return statement->done() && convert_columns_to_array(&columns, result);
+  return statement->done() && convertColumnsToArray(&columns, result);
 }
 
-bool Database::busy_timeout(int milliseconds) {
+bool Database::busyTimeout(int milliseconds) {
   return sqlite3_busy_timeout(database_, milliseconds) == SQLITE_OK;
 }
 
-void Database::create_columns(const Statement& statement,
-                              vector<Column>* columns) {
-  columns->resize(statement.column_count());
+void Database::createColumns(const Statement& statement,
+                             vector<Column>* columns) const {
+  columns->resize(statement.columnCount());
   set<string> unique_names;
-  for (int i = 0; i < statement.column_count(); ++i) {
+  for (int i = 0; i < statement.columnCount(); ++i) {
     // Clean the column name.
     static const sregex leading_non_alphabets = sregex::compile("^[^a-zA-Z]*");
     static const sregex non_alphanumerics = sregex::compile("[^a-zA-Z0-9]+");
-    string name(statement.column_name(i));
+    string name(statement.columnName(i));
     name = boost::xpressive::regex_replace(name, leading_non_alphabets, "");
     name = boost::xpressive::regex_replace(name, non_alphanumerics, " ");
     boost::algorithm::trim(name);
@@ -274,8 +274,8 @@ void Database::create_columns(const Statement& statement,
   }
 }
 
-bool Database::convert_columns_to_array(vector<Column>* columns,
-                                        mxArray** array) {
+bool Database::convertColumnsToArray(vector<Column>* columns,
+                                     mxArray** array) const {
   if (array == NULL)
     return false;
   if (columns->empty()) {
@@ -293,7 +293,7 @@ bool Database::convert_columns_to_array(vector<Column>* columns,
       deque<Value>* values = &(*columns)[i].values;
       mwSize j = 0;
       while (!values->empty()) {
-        mxArray* element = convert_value_to_array(values->front());
+        mxArray* element = convertValueToArray(values->front());
         mxSetFieldByNumber(*array, j++, i, element);
         values->pop_front();
       }
@@ -302,7 +302,7 @@ bool Database::convert_columns_to_array(vector<Column>* columns,
   return true;
 }
 
-mxArray* Database::convert_value_to_array(const Value& value) {
+mxArray* Database::convertValueToArray(const Value& value) const {
   mxArray* array = NULL;
   switch (value.first) {
     case SQLITE_INTEGER: {
