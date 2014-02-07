@@ -123,7 +123,7 @@ public:
   // Destroy the connection.
   ~Database();
   // Open a connection.
-  bool open(const string& filename);
+  bool open(const string& filename, int flags);
   // Return the last error code.
   int errorCode() const;
   // Return the last error message.

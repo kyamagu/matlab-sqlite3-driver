@@ -19,16 +19,35 @@ template class mex::Session<Database>;
 
 namespace {
 
+// Get a flag value for the specified field.
+inline int GetFlag(const mxArray* options, const char* field, int flag) {
+  return (mxIsLogicalScalarTrue(mxGetField(options, 0, field))) ? flag : 0;
+}
+
+// Get flag for the open operation.
+int GetOpenFlags(const mxArray* options) {
+  if (!mxIsStruct(options))
+    ERROR("Invalid option.");
+  return GetFlag(options, "ReadOnly", SQLITE_OPEN_READONLY) |
+         GetFlag(options, "ReadWrite", SQLITE_OPEN_READWRITE) |
+         GetFlag(options, "Create", SQLITE_OPEN_CREATE) |
+         GetFlag(options, "NoMutex", SQLITE_OPEN_NOMUTEX) |
+         GetFlag(options, "FullMutex", SQLITE_OPEN_FULLMUTEX) |
+         GetFlag(options, "SharedCache", SQLITE_OPEN_SHAREDCACHE) |
+         GetFlag(options, "PrivateCache", SQLITE_OPEN_PRIVATECACHE);
+}
+
 MEX_FUNCTION(open) (int nlhs,
                     mxArray* plhs[],
                     int nrhs,
                     const mxArray* prhs[]) {
-  CheckInputArguments(1, 1, nrhs);
+  CheckInputArguments(2, 2, nrhs);
   CheckOutputArguments(0, 1, nlhs);
   string filename(MxArray(prhs[0]).toString());
+  int flags = GetOpenFlags(prhs[1]);
   Database* database = NULL;
   int database_id = Session<Database>::create(&database);
-  if (!database->open(filename)) {
+  if (!database->open(filename, flags)) {
     const char* errorMessage = database->errorMessage();
     Session<Database>::destroy(database_id);
     ERROR(errorMessage);

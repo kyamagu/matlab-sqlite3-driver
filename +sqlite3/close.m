@@ -1,4 +1,4 @@
-function close( varargin )
+function close(varargin)
 %CLOSE Close a database.
 %
 %    sqlite3.close()
@@ -9,6 +9,5 @@ function close( varargin )
 % closed.
 %
 % See also sqlite3.open sqlite3.execute
-    libsqlite3_('close', varargin{:});
+  libsqlite3_('close', varargin{:});
 end
-

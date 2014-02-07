@@ -199,8 +199,11 @@ Database::~Database() {
   close();
 }
 
-bool Database::open(const string& filename) {
-  return sqlite3_open(filename.c_str(), &database_) == SQLITE_OK;
+bool Database::open(const string& filename, int flags) {
+  return sqlite3_open_v2(filename.c_str(),
+                         &database_,
+                         flags,
+                         NULL) == SQLITE_OK;
 }
 
 void Database::close() {
