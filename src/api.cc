@@ -34,7 +34,8 @@ int GetOpenFlags(const mxArray* options) {
          GetFlag(options, "NoMutex", SQLITE_OPEN_NOMUTEX) |
          GetFlag(options, "FullMutex", SQLITE_OPEN_FULLMUTEX) |
          GetFlag(options, "SharedCache", SQLITE_OPEN_SHAREDCACHE) |
-         GetFlag(options, "PrivateCache", SQLITE_OPEN_PRIVATECACHE);
+         GetFlag(options, "PrivateCache", SQLITE_OPEN_PRIVATECACHE) |
+         GetFlag(options, "OpenURI", SQLITE_OPEN_URI);
 }
 
 MEX_FUNCTION(open) (int nlhs,
