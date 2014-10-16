@@ -3,7 +3,13 @@
 // Kota Yamaguchi 2012 <kyamagu@cs.stonybrook.edu>
 
 #include <algorithm>
+#if __GNUC__ < 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ < 8))
+#include <boost/regex.hpp>
+using boost::regex;
+using boost::regex_replace;
+#else
 #include <regex>
+#endif
 #include <set>
 #include <sqlite3mex.h>
 #include <sstream>
@@ -130,7 +136,7 @@ const Value& Statement::columnValue(int i) {
   switch (columnType(i)) {
     case SQLITE_INTEGER: {
       value_.first = SQLITE_INTEGER;
-      value_.second = sqlite3_column_int64(statement_, i);
+      value_.second = static_cast<int64_t>(sqlite3_column_int64(statement_, i));
       break;
     }
     case SQLITE_FLOAT: {
@@ -258,8 +264,8 @@ void Database::createColumns(const Statement& statement,
     static const regex leading_non_alphabets("^[^a-zA-Z]+");
     static const regex non_alphanumerics("[^a-zA-Z0-9]+");
     string name(statement.columnName(i));
-    name = regex_replace(name, leading_non_alphabets, "");
-    name = regex_replace(name, non_alphanumerics, " ");
+    name = regex_replace(name, leading_non_alphabets, string(""));
+    name = regex_replace(name, non_alphanumerics, string(" "));
     name.erase(0, name.find_first_not_of(' '));
     name.erase(name.find_last_not_of(' ') + 1);
     replace(name.begin(), name.end(), ' ', '_');
