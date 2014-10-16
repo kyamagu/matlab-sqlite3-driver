@@ -2,13 +2,11 @@
 //
 // Kota Yamaguchi 2012 <kyamagu@cs.stonybrook.edu>
 
-#include "boost/algorithm/string.hpp"
-#include "boost/xpressive/xpressive.hpp"
+#include <algorithm>
+#include <regex>
 #include <set>
-#include "sqlite3mex.h"
+#include <sqlite3mex.h>
 #include <sstream>
-
-using boost::xpressive::sregex;
 
 namespace sqlite3mex {
 
@@ -132,20 +130,19 @@ const Value& Statement::columnValue(int i) {
   switch (columnType(i)) {
     case SQLITE_INTEGER: {
       value_.first = SQLITE_INTEGER;
-      value_.second = static_cast<IntegerValue>(
-          sqlite3_column_int64(statement_, i));
+      value_.second = sqlite3_column_int64(statement_, i);
       break;
     }
     case SQLITE_FLOAT: {
       value_.first = SQLITE_FLOAT;
-      value_.second = static_cast<FloatValue>(
-          sqlite3_column_double(statement_, i));
+      value_.second = sqlite3_column_double(statement_, i);
       break;
     }
     case SQLITE_TEXT: {
+      const char* data = reinterpret_cast<const char*>(
+          sqlite3_column_text(statement_, i));
       value_.first = SQLITE_TEXT;
-      value_.second = static_cast<TextValue>(reinterpret_cast<const char*>(
-          sqlite3_column_text(statement_, i)));
+      value_.second = string(data);
       break;
     }
     case SQLITE_BLOB: {
@@ -153,7 +150,7 @@ const Value& Statement::columnValue(int i) {
           sqlite3_column_blob(statement_, i));
       int bytes = sqlite3_column_bytes(statement_, i);
       value_.first = SQLITE_BLOB;
-      value_.second = BlobValue(blob, blob + bytes);
+      value_.second = vector<uint8_t>(blob, blob + bytes);
       break;
     }
     case SQLITE_NULL: {
@@ -165,12 +162,16 @@ const Value& Statement::columnValue(int i) {
   return value_;
 }
 
-StatementCache::StatementCache(size_t cache_size) : cache_size_(cache_size) {}
+StatementCache::StatementCache() :
+    cache_size_(kDefaultCacheSize) {}
+
+StatementCache::StatementCache(size_t cache_size) :
+    cache_size_(cache_size) {}
 
 StatementCache::~StatementCache() {}
 
 Statement* StatementCache::get(const string& statement, sqlite3* database) {
-  boost::unordered_map<string, Statement>::iterator entry =
+  unordered_map<string, Statement>::iterator entry =
       table_.find(statement);
   // Cache miss.
   if (entry == table_.end()) {
@@ -222,7 +223,7 @@ const char* Database::errorMessage() const {
   return sqlite3_errmsg(database_);
 }
 
-bool Database::execute(const string& statement_string, 
+bool Database::execute(const string& statement_string,
                        const vector<const mxArray*>& params,
                        mxArray** result) {
   if (!result)
@@ -254,14 +255,15 @@ void Database::createColumns(const Statement& statement,
   set<string> unique_names;
   for (int i = 0; i < statement.columnCount(); ++i) {
     // Clean the column name.
-    static const sregex leading_non_alphabets = sregex::compile("^[^a-zA-Z]*");
-    static const sregex non_alphanumerics = sregex::compile("[^a-zA-Z0-9]+");
+    static const regex leading_non_alphabets("^[^a-zA-Z]+");
+    static const regex non_alphanumerics("[^a-zA-Z0-9]+");
     string name(statement.columnName(i));
-    name = boost::xpressive::regex_replace(name, leading_non_alphabets, "");
-    name = boost::xpressive::regex_replace(name, non_alphanumerics, " ");
-    boost::algorithm::trim(name);
-    boost::algorithm::replace_all(name, " ", "_");
-    boost::algorithm::to_lower(name);
+    name = regex_replace(name, leading_non_alphabets, "");
+    name = regex_replace(name, non_alphanumerics, " ");
+    name.erase(0, name.find_first_not_of(' '));
+    name.erase(name.find_last_not_of(' ') + 1);
+    replace(name.begin(), name.end(), ' ', '_');
+    transform(name.begin(), name.end(), name.begin(), ::tolower);
     if (name.empty())
       name = "field";
     // Find a unique name for the duplicated column.
@@ -324,14 +326,14 @@ mxArray* Database::convertValueToArray(const Value& value) const {
     case SQLITE_TEXT: {
       // mxCreateString is simpler but slow for a long string.
       //array = mxCreateString(boost::get<TextValue>(value.second).c_str());
-      const TextValue& text = boost::get<TextValue>(value.second);
-      mwSize dimensions[] = {1, text.size()};
+      const string& text = boost::get<TextValue>(value.second);
+      mwSize dimensions[] = {1, static_cast<mwSize>(text.size())};
       array = mxCreateCharArray(2, dimensions);
       copy(text.begin(), text.end(), mxGetChars(array));
       break;
     }
     case SQLITE_BLOB: {
-      const BlobValue& blob = boost::get<BlobValue>(value.second);
+      const vector<uint8_t>& blob = boost::get<BlobValue>(value.second);
       array = mxCreateNumericMatrix(1, blob.size(), mxUINT8_CLASS, mxREAL);
       copy(blob.begin(), blob.end(),
            reinterpret_cast<uint8_t*>(mxGetData(array)));

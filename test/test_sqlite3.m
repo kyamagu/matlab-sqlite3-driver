@@ -22,7 +22,7 @@ function test_functional_1
     sqlite3.close();
     if exist(filename, 'file'), delete(filename); end
   end
-  
+
   sqlite3.open(filename);
   try
     sqlite3.timeout(1000);
@@ -45,7 +45,7 @@ function test_functional_2
     sqlite3.close(db_id);
     if exist(filename, 'file'), delete(filename); end
   end
-  
+
   try
     db_id = sqlite3.open(filename);
     sqlite3.timeout(db_id, 1000);

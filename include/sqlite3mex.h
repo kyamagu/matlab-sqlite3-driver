@@ -5,14 +5,14 @@
 #ifndef __SQLITE3MEX_H__
 #define __SQLITE3MEX_H__
 
-#include "boost/unordered_map.hpp"
 #include "boost/variant.hpp"
 #include <deque>
 #include <map>
 #include <mex.h>
-#include "sqlite3.h"
+#include <sqlite3.h>
 #include <stdint.h>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 using namespace std;
@@ -35,6 +35,7 @@ typedef struct {} NullValue;
 // Value of the sqlite row. A pair of type and value.
 typedef pair<int, boost::variant<IntegerValue, FloatValue, TextValue,
     BlobValue, NullValue> > Value;
+
 // Column of the query result.
 typedef struct {
   string name;         // Name of the column.
@@ -95,10 +96,12 @@ private:
 class StatementCache {
 public:
   // Default cache size.
-  static const int DEFAULT_CACHE_SIZE = 16;
+  static const int kDefaultCacheSize = 32;
 
   // Create a default cache.
-  StatementCache(size_t cache_size = DEFAULT_CACHE_SIZE);
+  StatementCache();
+  // Create a cache with specified size.
+  StatementCache(size_t cache_size);
   // Cache destructor.
   ~StatementCache();
   // Get the cached statement.
@@ -110,7 +113,7 @@ private:
   // FIFO to maintain generation of the keys.
   deque<string> fifo_;
   // Lookup table.
-  boost::unordered_map<string, Statement> table_;
+  unordered_map<string, Statement> table_;
   // Maximum cache size.
   size_t cache_size_;
 };
