@@ -28,6 +28,7 @@ function test_functional_1
     sqlite3.timeout(1000);
     sqlite3.execute('SELECT * FROM sqlite_master');
     s = sqlite3.execute('SELECT * FROM sqlite_master WHERE type = ?', 'table');
+    disp('SUCCESS');
     assert(isempty(s));
   catch e
     cleanup(filename);
@@ -71,4 +72,5 @@ function test_functional_3
   record = sqlite3.execute('SELECT * FROM records');
   assert(record.id == 1);
   assert(strcmp(record.value, 'foo'));
+  sqlite3.close();
 end

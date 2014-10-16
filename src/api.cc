@@ -3,101 +3,98 @@
 // Kota Yamaguchi 2012 <kyamagu@cs.stonybrook.edu>
 
 #include <limits>
-#include "mex/arguments.h"
-#include "mex/function.h"
-#include "mex/mxarray.h"
-#include "mex/session.h"
-#include "sqlite3mex.h"
+#include <mexplus.h>
+#include <sqlite3mex.h>
 
-using mex::CheckInputArguments;
-using mex::CheckOutputArguments;
-using mex::MxArray;
-using mex::Session;
-using sqlite3mex::Database;
+using namespace mexplus;
+using namespace sqlite3mex;
 
-template class mex::Session<Database>;
+template class mexplus::Session<Database>;
 
 namespace {
 
-// Get a flag value for the specified field.
-inline int GetFlag(const mxArray* options, const char* field, int flag) {
-  return (mxIsLogicalScalarTrue(mxGetField(options, 0, field))) ? flag : 0;
+intptr_t getDefaultId() {
+  intptr_t id = 0;
+  const Session<Database>::InstanceMap& map =
+      Session<Database>::getInstanceMap();
+  if (!map.empty())
+    id = map.rbegin()->first;
+  return id;
 }
 
-// Get flag for the open operation.
-int GetOpenFlags(const mxArray* options) {
-  if (!mxIsStruct(options))
-    ERROR("Invalid option.");
-  return GetFlag(options, "ReadOnly", SQLITE_OPEN_READONLY) |
-         GetFlag(options, "ReadWrite", SQLITE_OPEN_READWRITE) |
-         GetFlag(options, "Create", SQLITE_OPEN_CREATE) |
-         GetFlag(options, "NoMutex", SQLITE_OPEN_NOMUTEX) |
-         GetFlag(options, "FullMutex", SQLITE_OPEN_FULLMUTEX) |
-         GetFlag(options, "SharedCache", SQLITE_OPEN_SHAREDCACHE) |
-         GetFlag(options, "PrivateCache", SQLITE_OPEN_PRIVATECACHE) |
-         GetFlag(options, "OpenURI", SQLITE_OPEN_URI);
+MEX_DEFINE(open) (int nlhs, mxArray* plhs[],
+                  int nrhs, const mxArray* prhs[]) {
+  InputArguments input(nrhs, prhs, 1, 8, "ReadOnly", "ReadWrite", "Create",
+      "NoMutex", "FullMutex", "SharedCache", "PrivateCache", "OpenURI");
+  OutputArguments output(nlhs, plhs, 1);
+  string filename(input.get<string>(0));
+  int flags =
+      ((input.get<bool>("ReadOnly", false)) ? SQLITE_OPEN_READONLY : 0) |
+      ((input.get<bool>("ReadWrite", nrhs == 1)) ? SQLITE_OPEN_READWRITE : 0) |
+      ((input.get<bool>("Create", nrhs == 1)) ? SQLITE_OPEN_CREATE : 0) |
+      ((input.get<bool>("NoMutex", false)) ? SQLITE_OPEN_NOMUTEX : 0) |
+      ((input.get<bool>("FullMutex", false)) ? SQLITE_OPEN_FULLMUTEX : 0) |
+      ((input.get<bool>("SharedCache", false)) ? SQLITE_OPEN_SHAREDCACHE : 0) |
+      ((input.get<bool>("PrivateCache", false)) ?
+          SQLITE_OPEN_PRIVATECACHE : 0) |
+      ((input.get<bool>("OpenURI", false)) ? SQLITE_OPEN_URI : 0);
+  unique_ptr<Database> database(new Database());
+  if (!database->open(filename, flags))
+    ERROR(database->errorMessage());
+  output.set(0, Session<Database>::create(database.release()));
 }
 
-MEX_FUNCTION(open) (int nlhs,
-                    mxArray* plhs[],
-                    int nrhs,
-                    const mxArray* prhs[]) {
-  CheckInputArguments(2, 2, nrhs);
-  CheckOutputArguments(0, 1, nlhs);
-  string filename(MxArray(prhs[0]).toString());
-  int flags = GetOpenFlags(prhs[1]);
-  Database* database = NULL;
-  int database_id = Session<Database>::create(&database);
-  if (!database->open(filename, flags)) {
-    const char* errorMessage = database->errorMessage();
-    Session<Database>::destroy(database_id);
-    ERROR(errorMessage);
-  }
-  plhs[0] = MxArray(database_id).getMutable();
+MEX_DEFINE(close) (int nlhs, mxArray* plhs[],
+                   int nrhs, const mxArray* prhs[]) {
+  InputArguments input;
+  input.define("default", 0);
+  input.define("id-given", 1);
+  input.parse(nrhs, prhs);
+  OutputArguments output(nlhs, plhs, 0);
+  intptr_t id = (input.is("id-given")) ?
+      input.get<intptr_t>(0) : getDefaultId();
+  if (id > 0)
+    Session<Database>::destroy(id);
 }
 
-MEX_FUNCTION(close) (int nlhs,
-                     mxArray* plhs[],
-                     int nrhs,
-                     const mxArray* prhs[]) {
-  CheckInputArguments(0, 1, nrhs);
-  CheckOutputArguments(0, 0, nlhs);
-  int database_id = (nrhs > 0) ? MxArray(prhs[0]).toInt() : 0;
-  Session<Database>::destroy(database_id);
-}
-
-MEX_FUNCTION(execute) (int nlhs,
-                       mxArray* plhs[],
-                       int nrhs,
-                       const mxArray* prhs[]) {
-  CheckInputArguments(1, numeric_limits<int>::max(), nrhs);
-  CheckOutputArguments(0, 1, nlhs);
+MEX_DEFINE(execute) (int nlhs, mxArray* plhs[],
+                     int nrhs, const mxArray* prhs[]) {
+  if (nrhs < 1)
+    ERROR("Too few input arguments: %d for at least %d.", nrhs, 1);
+  if (nlhs > 1)
+    ERROR("Too many output arguments: %d for at most %d.", nlhs, 1);
   vector<const mxArray*> rhs(prhs, prhs + nrhs);
   vector<const mxArray*>::iterator it = rhs.begin();
-  int id = (mxIsNumeric(*it)) ?
-      MxArray(*(it++)).toInt() : 0;
-  string sql = MxArray(*(it++)).toString();
+  intptr_t id = (mxIsNumeric(*it)) ?
+      MxArray::to<intptr_t>(*(it++)) : getDefaultId();
+  string sql = MxArray::to<string>(*(it++));
   vector<const mxArray*> params(it, rhs.end());
   Database* database = Session<Database>::get(id);
-  if (!database)
-    ERROR("No open database found.");
   if (!database->execute(sql, params, &plhs[0]))
     ERROR("%s: %s", database->errorMessage(), sql.c_str());
 }
 
-MEX_FUNCTION(timeout) (int nlhs,
-                       mxArray* plhs[],
-                       int nrhs,
-                       const mxArray* prhs[]) {
-  CheckInputArguments(1, 2, nrhs);
-  CheckOutputArguments(0, 0, nlhs);
-  int id = (nrhs == 1) ? 0 : MxArray(prhs[0]).toInt();
-  int timeout = MxArray(prhs[nrhs == 2]).toInt();
+MEX_DEFINE(timeout) (int nlhs, mxArray* plhs[],
+                     int nrhs, const mxArray* prhs[]) {
+  InputArguments input;
+  input.define("default", 1);
+  input.define("id-given", 2);
+  input.parse(nrhs, prhs);
+  OutputArguments output(nlhs, plhs, 0);
+  intptr_t id, timeout;
+  if (input.is("default")) {
+    id = getDefaultId();
+    timeout = input.get<int>(0);
+  }
+  else {
+    id = input.get<intptr_t>(0);
+    timeout = input.get<int>(1);
+  }
   Database* database = Session<Database>::get(id);
-  if (!database)
-    ERROR("No open database found.");
   if (!database->busyTimeout(timeout))
     ERROR("Failed to set timeout.");
 }
 
 } // namespace
+
+MEX_DISPATCH
