@@ -7,7 +7,7 @@ function make(action, varargin)
   switch action
     case 'all'
       options = '';
-      if isunix()
+      if isunix() && ~ismac()
         options = ' -ldl -lboost_regex'; 
       end
       dispAndEval('mex -c -Iinclude src/sqlite3/sqlite3.c -outdir src/sqlite3')

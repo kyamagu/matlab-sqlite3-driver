@@ -3,7 +3,7 @@
 // Kota Yamaguchi 2012 <kyamagu@cs.stonybrook.edu>
 
 #include <algorithm>
-#if __GNUC__ < 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ < 8))
+#if !__clang__ && (__GNUC__ < 4 || (__GNUC__ == 4 && (__GNUC_MINOR__ < 8)))
 #include <boost/regex.hpp>
 using boost::regex;
 using boost::regex_replace;
