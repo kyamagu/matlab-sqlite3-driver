@@ -81,7 +81,8 @@ MEX_DEFINE(timeout) (int nlhs, mxArray* plhs[],
   input.define("id-given", 2);
   input.parse(nrhs, prhs);
   OutputArguments output(nlhs, plhs, 0);
-  intptr_t id, timeout;
+  intptr_t id;
+  int timeout;
   if (input.is("default")) {
     id = getDefaultId();
     timeout = input.get<int>(0);
