@@ -11,6 +11,20 @@ using namespace sqlite3mex;
 
 template class mexplus::Session<Database>;
 
+namespace mexplus {
+
+template <>
+void MxArray::to(const mxArray* cell_array, vector<const mxArray*>* arrays) {
+  if (!arrays)
+    ERROR("Null pointer exception.");
+  MxArray cell(cell_array);
+  arrays->resize(cell.size());
+  for (int i = 0; i < cell.size(); ++i)
+    (*arrays)[i] = cell.at(i);
+}
+
+} // namespace mexplus
+
 namespace {
 
 intptr_t getDefaultId() {
@@ -59,16 +73,24 @@ MEX_DEFINE(close) (int nlhs, mxArray* plhs[],
 
 MEX_DEFINE(execute) (int nlhs, mxArray* plhs[],
                      int nrhs, const mxArray* prhs[]) {
-  if (nrhs < 1)
-    ERROR("Too few input arguments: %d for at least %d.", nrhs, 1);
-  if (nlhs > 1)
-    ERROR("Too many output arguments: %d for at most %d.", nlhs, 1);
-  vector<const mxArray*> rhs(prhs, prhs + nrhs);
-  vector<const mxArray*>::iterator it = rhs.begin();
-  intptr_t id = (mxIsNumeric(*it)) ?
-      MxArray::to<intptr_t>(*(it++)) : getDefaultId();
-  string sql = MxArray::to<string>(*(it++));
-  vector<const mxArray*> params(it, rhs.end());
+  InputArguments input;
+  input.define("default", 2);
+  input.define("id-given", 3);
+  input.parse(nrhs, prhs);
+  OutputArguments output(nlhs, plhs, 1);
+  intptr_t id = 0;
+  string sql;
+  vector<const mxArray*> params;
+  if (input.is("default")) {
+    id = getDefaultId();
+    input.get<string>(0, &sql);
+    input.get<vector<const mxArray*> >(1, &params);
+  }
+  else {
+    id = input.get<intptr_t>(0);
+    input.get<string>(1, &sql);
+    input.get<vector<const mxArray*> >(2, &params);
+  }
   Database* database = Session<Database>::get(id);
   if (!database->execute(sql, params, &plhs[0]))
     ERROR("%s: %s", database->errorMessage(), sql.c_str());
@@ -81,8 +103,8 @@ MEX_DEFINE(timeout) (int nlhs, mxArray* plhs[],
   input.define("id-given", 2);
   input.parse(nrhs, prhs);
   OutputArguments output(nlhs, plhs, 0);
-  intptr_t id;
-  int timeout;
+  intptr_t id = 0;
+  int timeout = 0;
   if (input.is("default")) {
     id = getDefaultId();
     timeout = input.get<int>(0);

@@ -17,5 +17,14 @@ function results = execute(varargin)
 %     results = sqlite3.execute(db_id, 'SELECT * FROM records WHERE name = ?', 'foo')
 %
 % See also sqlite3.open sqlite3.close
-  results = libsqlite3_('execute', varargin{:});
+  nargchk(1, inf, nargin);
+  if ischar(varargin{1})
+    results = libsqlite3_('execute', varargin{1}, varargin(2:end));
+  else
+    nargchk(2, inf, nargin);
+    results = libsqlite3_('execute', ...
+                          varargin{1}, ...
+                          varargin{2}, ...
+                          varargin(3:end));
+  end
 end

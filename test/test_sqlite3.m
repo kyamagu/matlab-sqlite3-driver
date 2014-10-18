@@ -28,7 +28,6 @@ function test_functional_1
     sqlite3.timeout(1000);
     sqlite3.execute('SELECT * FROM sqlite_master');
     s = sqlite3.execute('SELECT * FROM sqlite_master WHERE type = ?', 'table');
-    disp('SUCCESS');
     assert(isempty(s));
   catch e
     cleanup(filename);
