@@ -81,6 +81,7 @@ public:
                                           CaseInsensitiveElementComparator());
     }
   };
+
   typedef std::map<std::string, const mxArray*, CaseInsensitiveComparator>
       OptionMap;
   /** Definition of arguments.
@@ -171,7 +172,7 @@ public:
     if (definitions_.empty())
       mexErrMsgIdAndTxt("mexplus:arguments:error", "No format defined.");
     const Definition& definition = definitions_.begin()->second;
-    std::map<std::string, const mxArray*>::const_iterator entry =
+    OptionMap::const_iterator entry =
         definition.optionals.find(option_name);
     if (entry == definition.optionals.end())
       mexErrMsgIdAndTxt("mexplus:arguments:error",
@@ -194,13 +195,6 @@ public:
    */
   const mxArray* operator[] (const std::string& option_name) const {
     return get(option_name);
-  }
-  /** Return size.
-   */
-  size_t size() const {
-    return (definitions_.empty()) ? 0 :
-        (definitions_.begin()->second.mandatories.size() +
-         2 * definitions_.begin()->second.optionals.size());
   }
 
 private:
@@ -244,7 +238,7 @@ private:
         error_message_.assign(message.str());
         return false;
       }
-      std::map<std::string, const mxArray*>::iterator entry =
+      OptionMap::iterator entry =
           definition->optionals.find(option_name);
       if (entry == definition->optionals.end()) {
         message << "Invalid option name: '" << option_name << "'.";

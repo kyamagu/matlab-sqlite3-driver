@@ -29,7 +29,7 @@ function value = libext
 %LIBEXT
   value = 'o';
   if ispc()
-    value = 'lib';
+    value = 'obj';
   end
 end
 
