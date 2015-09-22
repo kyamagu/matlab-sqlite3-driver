@@ -8,7 +8,7 @@ function make(action, varargin)
     case 'all'
       options = '';
       if isunix() && ~ismac()
-        options = ' -ldl -lboost_regex';
+        options = ' -ldl -lboost_regex CXXFLAGS="$CXXFLAGS -std=c++11"';
       end
       dispAndEval('mex -c -Iinclude src/sqlite3/sqlite3.c -outdir src/sqlite3');
       dispAndEval([...
