@@ -14,6 +14,30 @@ using boost::regex_replace;
 #include <sqlite3mex.h>
 #include <sstream>
 
+namespace {
+
+// Create a persistent mxArray.
+class PersistentMxArray {
+ public:
+  // Create a new persistent mxArray.
+  PersistentMxArray(mxArray* array) : array_(array) {
+    if (!array_)
+      ERROR("Null pointer exception.");
+    mexMakeArrayPersistent(array_);
+  }
+  ~PersistentMxArray() { mxDestroyArray(array_); }
+  // Return the pointer.
+  mxArray* get() { return array_; }
+ private:
+  // Internal mxArray* pointer.
+  mxArray* array_;
+};
+
+// Label for unicode2native() and native2unicode().
+PersistentMxArray kUTF8Label(mxCreateString("utf8"));
+
+}
+
 namespace sqlite3mex {
 
 Statement::Statement() : statement_(NULL) {}
@@ -67,13 +91,18 @@ bool Statement::bind(const vector<const mxArray*>& params) {
         code_ = sqlite3_bind_int64(statement_, i + 1, mxGetScalar(params[i]));
     }
     else if (mxIsChar(params[i])) {
-      char* text = mxArrayToString(params[i]);
+      mxArray* blob = mxCreateNumericMatrix(1,
+                                            mxGetNumberOfElements(params[i]),
+                                            mxUINT8_CLASS,
+                                            mxREAL);
+      mxArray* lhs[] = {const_cast<mxArray*>(params[i]), kUTF8Label.get()};
+      mexCallMATLAB(1, &blob, 2, lhs, "unicode2native");
       code_ = sqlite3_bind_text(statement_,
                                 i + 1,
-                                text,
+                                reinterpret_cast<char*>(mxGetData(blob)),
                                 -1,
                                 SQLITE_TRANSIENT);
-      mxFree(text);
+      mxDestroyArray(blob);
     }
     else if (mxIsUint8(params[i])) {
       code_ = sqlite3_bind_blob(statement_,
@@ -330,12 +359,19 @@ mxArray* Database::convertValueToArray(const Value& value) const {
       break;
     }
     case SQLITE_TEXT: {
-      // mxCreateString is simpler but slow for a long string.
-      //array = mxCreateString(boost::get<TextValue>(value.second).c_str());
+      // There is no direct UTF-8 conversion in MEX API...
       const string& text = boost::get<TextValue>(value.second);
       mwSize dimensions[] = {1, static_cast<mwSize>(text.size())};
       array = mxCreateCharArray(2, dimensions);
-      copy(text.begin(), text.end(), mxGetChars(array));
+      mxArray* blob = mxCreateNumericMatrix(1,
+                                            text.size(),
+                                            mxUINT8_CLASS,
+                                            mxREAL);
+      copy(text.begin(), text.end(),
+           reinterpret_cast<uint8_t*>(mxGetData(blob)));
+      mxArray* lhs[] = {blob, kUTF8Label.get()};
+      mexCallMATLAB(1, &array, 2, lhs, "native2unicode");
+      mxDestroyArray(blob);
       break;
     }
     case SQLITE_BLOB: {
