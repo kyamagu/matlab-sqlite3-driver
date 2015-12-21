@@ -23,6 +23,8 @@ Here is a quick example.
 Prerequisites
 -------------
 
+This driver requires Matlab R2011b or later.
+
 This driver is built on the Matlab `mex` interface. The package requires a C++
 compiler for `mex`. In Windows, a C++ compiler is available from Visual Studio
 and Microsoft SDK. Check
