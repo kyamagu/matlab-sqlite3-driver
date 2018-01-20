@@ -303,12 +303,16 @@ void Database::createColumns(const Statement& statement,
     transform(name.begin(), name.end(), name.begin(), ::tolower);
     if (name.empty())
       name = "field";
+    // Ensure name fits in MATLAB 63-char limit. This truncates and leaves 1 character buffer for up to 10 name collisions below
+    if (name.length() > 62) {
+      name.resize(62);
+    }
     // Find a unique name for the duplicated column.
     int index = 0;
     string original_name(name);
     while (unique_names.find(name) != unique_names.end()) {
       stringstream name_builder(stringstream::in | stringstream::out);
-      name_builder << original_name << "_" << ++index;
+      name_builder << original_name << ++index;
       name = name_builder.str();
     }
     unique_names.insert(name);
